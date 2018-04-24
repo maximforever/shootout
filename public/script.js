@@ -54,6 +54,7 @@ function main(){
 }
 
 function gameInit(){
+    console.log("initiating");
     socket.emit("update game");
     gameLoop();
 }
@@ -68,7 +69,8 @@ function gameLoop(){
         drawBoard(currentGame);
     } else {
         drawBoard(currentGame);
-        
+        text(currentGame.winner + " has won.", WIDTH/2, HEIGHT/2, 30, "white", true);
+
     }
     
     var animationCycle = setTimeout(function(){ requestAnimationFrame(gameLoop) }, animationSpeed);
@@ -76,10 +78,12 @@ function gameLoop(){
 }
 
 function sendMovement(){
-    if(keypressLeft){ socket.emit("move player", 65) }
-    if(keypressRight){ socket.emit("move player", 83) }
-    if(keypressDown){ socket.emit("move player", 68) }
-    if(keypressUp){ socket.emit("move player", 87) }   
+    if(currentGame.status != "gameover"){
+        if(keypressLeft){ socket.emit("move player", 65) }
+        if(keypressRight){ socket.emit("move player", 83) }
+        if(keypressDown){ socket.emit("move player", 68) }
+        if(keypressUp){ socket.emit("move player", 87) }   
+    }
 }
 
 
@@ -94,6 +98,11 @@ function drawBoard(game){
 
     drawShotLine();
     drawBullets();
+
+    if(typeof(game.bullets) != "undefined"){
+        $("#bulletCount").text(game.bullets.length);
+    }
+
 }
 
 function drawBackround(color){
@@ -102,6 +111,7 @@ function drawBackround(color){
 
 function drawPlayer(player){
     circle(player.x, player.y, player.size, player.color, false);
+
 
     var healthBarWidth = player.size*2 + 10;                // those extra 10 px make the players look a little nicer              
     var healthWidth = player.hp/100*healthBarWidth;
@@ -138,12 +148,19 @@ function drawBullets(){
 }
 
 function shoot(){
-    var shot = {
-        x: lastX, 
-        y: lastY
-    }
 
-    socket.emit("shoot", shot);
+    if(currentGame.status != "gameover"){
+
+        zapMP3.currentTime = 0;
+        zapMP3.play();
+
+        var shot = {
+            x: lastX, 
+            y: lastY
+        }
+
+        socket.emit("shoot", shot);
+    }
 }
 
 
@@ -151,6 +168,10 @@ function shoot(){
 
 $("body").on("click", "#update", function(){
     socket.emit("update game");
+});
+
+$("body").on("click", "#reset", function(){
+    socket.emit("reset game");
 });
 
 
@@ -162,7 +183,6 @@ $("#canvas").on("mousemove", function(e){
 
 
 $("#canvas").on("click", function(e){
-    console.log(lastX + ", " + lastY);
     shoot();
 });
 
@@ -193,13 +213,6 @@ $("body").on("keyup", function(e){
 });
 
 
-$("#canvas").on("click", function(e){
-
-    zapMP3.currentTime = 0;
-    zapMP3.play();
-
-
-});
 
 
 
@@ -212,12 +225,11 @@ $("#canvas").on("click", function(e){
 socket.on('updated game', function(newData){
     currentGame = newData.game;
     thisPlayer = newData.player;
-
 });
 
 
 socket.on('gameover', function(player){
-    
+    gameOver = true;
 });
 
 

@@ -119,7 +119,7 @@ MongoClient.connect(dbAddress, function(err, db){
 
             if(userCount == 0){
                 console.log("resetting game!");
-                game.resetGame(function(resetGame){
+                game.resetGame(function(updatedGame){
                     var newData = {
                         game: updatedGame,
                         player: thisGame[socket.id]
@@ -127,8 +127,6 @@ MongoClient.connect(dbAddress, function(err, db){
 
                     io.emit("updated game", newData);
                 });
-
-
 
             }
         });
@@ -144,6 +142,20 @@ MongoClient.connect(dbAddress, function(err, db){
             }
 
             io.emit("updated game", newData);
+        })
+
+        socket.on("reset game", function(){
+            console.log("resetting game");
+            game.resetGame(function(updatedGame){
+                var newData = {
+                    game: updatedGame,
+                    player: thisGame[socket.id]
+                }
+
+                console.log(newData);
+
+                io.emit("updated game", newData);
+            });
         })
 
         socket.on("move player", function(dir){
@@ -182,7 +194,6 @@ MongoClient.connect(dbAddress, function(err, db){
     });
 
     app.get("/", function(req, res){
-
         res.render("index"); 
     })
 

@@ -1,9 +1,10 @@
 var originalGame = {
     status: "in progress",
     background: "#00447C",
+    winner: "",
     p1: {
         x: 100,
-        y: 10,
+        y: 100,
         color: "#96A9D9",
         size: 10,
         hp: 100
@@ -20,12 +21,12 @@ var originalGame = {
 
 var game = JSON.parse(JSON.stringify(originalGame));         // make a deep copy
 
-function resetGame(){
+function resetGame(callback){
     game = JSON.parse(JSON.stringify(originalGame));
     console.log("the game is now:");
     console.log(game);
 
-    return game;
+    callback(game);
 }
 
 function getGame(){
@@ -89,7 +90,7 @@ function createBullet(target, thisPlayer, io, socket){
         deltaY: dy,
         player: thisPlayer,
         speed: 3,                       // this should vary with powerups
-        damage: 5,                      // this should vary with powerups
+        damage: 20,                      // this should vary with powerups
         hit: false,
         id: Math.floor(Date.now()*Math.random())
     }
@@ -109,13 +110,22 @@ function createBullet(target, thisPlayer, io, socket){
                 player: updatedGame[socket.id]
             }
 
-            checkForBulletHits(bullet);
+            checkForBulletHits(bullet, io);
 
             io.emit("updated game", newData);
 
 
         } else {
+            // stop it from moving
             clearInterval(bulletMove);
+
+            // actually delete it
+
+            for(var i = 0; i < game.bullets.length; i++){
+                if(game.bullets[i].id == bullet.id){
+                    game.bullets.splice(i, 1);
+                }
+            }
         }
 
     }, 20)
@@ -125,7 +135,7 @@ function createBullet(target, thisPlayer, io, socket){
 
 }
 
-function checkForBulletHits(bullet){
+function checkForBulletHits(bullet, io){
 
     var otherPlayer = "p2";
     if(bullet.player == "p2"){ otherPlayer = "p1" }
@@ -142,8 +152,9 @@ function checkForBulletHits(bullet){
         console.log(otherPlayer + " hit!");
         game[otherPlayer].hp -= bullet.damage;
 
-        if (game[bullet.player].hp <= 0){
-            game.status = "over";
+        if (game[otherPlayer].hp <= 0){
+            game.status = "gameover";
+            game.winner = bullet.player;
             io.emit("gameover", bullet.player)
         }
 
