@@ -98,7 +98,6 @@ function createBullet(target, thisPlayer, io, socket){
     var bulletMove = setInterval(function(){
 
 
-
         if(bullet.x < 400 && bullet.x > 0 && bullet.y < 300 && bullet.y > 0 && !bullet.hit){
             bullet.x += bullet.deltaX*bullet.speed;
             bullet.y += bullet.deltaY*bullet.speed;
