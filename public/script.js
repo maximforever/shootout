@@ -29,8 +29,7 @@ var currentGame = {
 var soundtrack = new Audio('assets/StarfieldDraft1.mp3');
 
 var zapMP3 = new Audio('assets/zap.mp3');
-var hitMP3 = new Audio('assets/hit1.mp3');
-var hurtMP3 = new Audio('assets/hit2.mp3');
+var hitMP3 = new Audio('assets/hit.mp3');
 var thumpMP3 = new Audio('assets/thump.mp3');
 
 var hpMP3 = new Audio('assets/hp.mp3');
@@ -93,8 +92,15 @@ function drawBoard(game){
     drawBackround(game.background);
     sendMovement();
 
-    if(game.p1){ drawPlayer(game.p1) }
-    if(game.p2){ drawPlayer(game.p2) }
+    if(game.p1){ 
+        drawBase(game.p1)
+        drawPlayer(game.p1) 
+    }
+
+    if(game.p2){ 
+        drawBase(game.p2)
+        drawPlayer(game.p2) 
+    }
 
     drawShotLine();
     drawBullets();
@@ -124,6 +130,35 @@ function drawPlayer(player){
     }
 }
 
+function drawBase(player){
+
+    var p1coords = {
+        x: 0,
+        y: 0,
+        color: "#6B769E"
+    }
+
+    var p2coords = {
+        x: (WIDTH - player.size * 4),
+        y: (HEIGHT - player.size * 3),
+        color: "#c900c2"
+    }
+
+    var coords = (player.player == "1") ? p1coords : p2coords;
+    rect(coords.x,coords.y, player.size * 4 , player.size * 3, coords.color);
+
+
+    if(inBase(game["p1"])){
+        coords.color = "#6b9e8e"
+    }
+
+    if(inBase(game["p2"])){
+        coords.color = "#ffbd30"
+    }
+
+
+}
+
 function drawShotLine(){
     if(thisPlayer){
         //line(currentGame[thisPlayer].x, currentGame[thisPlayer].y, lastX, lastY, 1)
@@ -136,14 +171,24 @@ function drawBullets(){
         currentGame.bullets.forEach(function(bullet){
 
             if(!bullet.hit){
-                line(bullet.x, bullet.y, bullet.x - bullet.deltaX*10, bullet.y - bullet.deltaY*10, "red", 3) 
+                makeBullet(bullet.x, bullet.y, bullet.x - bullet.deltaX*10, bullet.y - bullet.deltaY*10, "#ED0014", 3) 
             }
-            
 
+            bullet.x += bullet.deltaX*bullet.speed;
+            bullet.y += bullet.deltaY*bullet.speed;
+
+
+            var otherPlayer = "p2";
+            if(bullet.player == "p2"){ otherPlayer = "p1" }
+
+
+            if(distanceBetween(bullet.x, currentGame[otherPlayer].x, bullet.y, currentGame[otherPlayer].y) < currentGame[otherPlayer].size){
+                console.log("BOOM!");
+                hitMP3.currentTime = 0;
+                hitMP3.play();
+            }
         });
-    } else {
-        console.log("no bullets");
-    }
+    } 
 
 }
 
@@ -161,6 +206,24 @@ function shoot(){
 
         socket.emit("shoot", shot);
     }
+}
+
+function inBase(player){
+
+    var rect = {};
+
+    if(parseInt(player.player) == 1){
+        rect.x = 0;
+        rect.y = 0;
+    } else if(parseInt(player.player) == 2){
+        rect.x = (WIDTH - player.size * 4),
+        rect.y = (HEIGHT - player.size * 3);
+    }
+
+
+   // if( (player.x + player.size) < (rect.x + player.size * 4))
+
+
 }
 
 
@@ -227,6 +290,9 @@ socket.on('updated game', function(newData){
     thisPlayer = newData.player;
 });
 
+socket.on('updated bullet locations', function(updatedBullets){
+    currentGame.bullets = updatedBullets;
+});
 
 socket.on('gameover', function(player){
     gameOver = true;
@@ -242,8 +308,12 @@ function clear() {
 }
 
 function circle(x,y,r, color, stroke) {
+
     ctx.beginPath();
     ctx.arc(x, y, r, 0, Math.PI*2, false);               // start at 0, end at Math.PI*2
+    
+    ctx.shadowBlur = 30;
+    ctx.shadowColor = color;
     ctx.closePath();
     ctx.fillStyle = color;
 
@@ -255,6 +325,9 @@ function circle(x,y,r, color, stroke) {
 
 
     ctx.fill();
+
+
+    ctx.shadowColor = "transparent";
 }
 
 function rect(x,y,w,h, color) {
@@ -292,12 +365,31 @@ function line(x1, y1, x2, y2, color, width){
     ctx.stroke();
 }
 
+function makeBullet(x1, y1, x2, y2, color, width){
+
+    ctx.beginPath();
+
+    ctx.shadowBlur = 10;
+    ctx.globalAlpha = 0.6;
+    ctx.shadowColor = "#BA0E11";
+    ctx.strokeStyle = color;
+    ctx.lineWidth = width;
+    ctx.moveTo(x1,y1);
+    ctx.lineTo(x2,y2);
+    ctx.stroke();
+
+    ctx.globalAlpha = 1;
+    ctx.shadowColor = "transparent";
+}
+
+
 /* other functions */
 
 function randBetween(min, max){
     return Math.floor(Math.random() * (max - min) + min);
 }
 
-function getDistance(x1, y1, x2, y2){
+
+function distanceBetween(x1, x2, y1, y2){
     return Math.sqrt(Math.pow((x1-x2),2) + Math.pow((y1-y2),2));
 }

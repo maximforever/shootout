@@ -2,19 +2,23 @@ var originalGame = {
     status: "in progress",
     background: "#00447C",
     winner: "",
+    width: 0,
+    height: 0, 
     p1: {
-        x: 100,
-        y: 100,
-        color: "#96A9D9",
-        size: 10,
-        hp: 100
-    },
-    p2: {
         x: 50,
         y: 50,
+        color: "#96A9D9",
+        size: 10,
+        hp: 100,
+        player: 1
+    },
+    p2: {
+        x: 300,
+        y: 250,
         color: "#F26DF9", 
         size: 10, 
-        hp: 100
+        hp: 100,
+        player: 2
     },
     bullets: []
 }
@@ -90,17 +94,30 @@ function createBullet(target, thisPlayer, io, socket){
         deltaY: dy,
         player: thisPlayer,
         speed: 3,                       // this should vary with powerups
-        damage: 20,                      // this should vary with powerups
+        damage: 5,                      // this should vary with powerups
         hit: false,
         id: Math.floor(Date.now()*Math.random())
     }
 
     var bulletMove = setInterval(function(){
 
+        checkForBulletHits(bullet, io);
 
         if(bullet.x < 400 && bullet.x > 0 && bullet.y < 300 && bullet.y > 0 && !bullet.hit){
             bullet.x += bullet.deltaX*bullet.speed;
             bullet.y += bullet.deltaY*bullet.speed;
+
+        } else {
+            // stop tracking the bullet's movement
+            clearInterval(bulletMove);
+
+            // delete the bullet from the bullets array
+
+            for(var i = 0; i < game.bullets.length; i++){
+                if(game.bullets[i].id == bullet.id){
+                    game.bullets.splice(i, 1);
+                }
+            }
 
             var updatedGame = getGame();
 
@@ -109,22 +126,8 @@ function createBullet(target, thisPlayer, io, socket){
                 player: updatedGame[socket.id]
             }
 
-            checkForBulletHits(bullet, io);
-
             io.emit("updated game", newData);
 
-
-        } else {
-            // stop it from moving
-            clearInterval(bulletMove);
-
-            // actually delete it
-
-            for(var i = 0; i < game.bullets.length; i++){
-                if(game.bullets[i].id == bullet.id){
-                    game.bullets.splice(i, 1);
-                }
-            }
         }
 
     }, 20)
