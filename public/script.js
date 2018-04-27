@@ -26,8 +26,6 @@ var currentGame = {
 
 /* audio */
 
-var soundtrack = new Audio('assets/StarfieldDraft1.mp3');
-
 var zapMP3 = new Audio('assets/zap.mp3');
 var hitMP3 = new Audio('assets/hit.mp3');
 var thumpMP3 = new Audio('assets/thump.mp3');
@@ -64,7 +62,7 @@ function gameLoop(){
 
     clear();
 
-    if(currentGame != null && currentGame.status != "gameover") { 
+    if(currentGame != null && typeof(currentGame) != "undefined" && currentGame.status != "gameover") { 
         drawBoard(currentGame);
     } else {
         drawBoard(currentGame);
@@ -87,18 +85,17 @@ function sendMovement(){
 
 
 function drawBoard(game){
-    // console.log(game);
 
     drawBackround(game.background);
     sendMovement();
 
     if(game.p1){ 
-        drawBase(game.p1)
+        drawBase(game.p1.base)
         drawPlayer(game.p1) 
     }
 
     if(game.p2){ 
-        drawBase(game.p2)
+        drawBase(game.p2.base)
         drawPlayer(game.p2) 
     }
 
@@ -106,7 +103,7 @@ function drawBoard(game){
     drawBullets();
 
     if(typeof(game.bullets) != "undefined"){
-        $("#bulletCount").text(game.bullets.length);
+        $("#bullet-count").text(game[thisPlayer].bullets);
     }
 
 }
@@ -130,33 +127,8 @@ function drawPlayer(player){
     }
 }
 
-function drawBase(player){
-
-    var p1coords = {
-        x: 0,
-        y: 0,
-        color: "#6B769E"
-    }
-
-    var p2coords = {
-        x: (WIDTH - player.size * 4),
-        y: (HEIGHT - player.size * 3),
-        color: "#c900c2"
-    }
-
-    var coords = (player.player == "1") ? p1coords : p2coords;
-    rect(coords.x,coords.y, player.size * 4 , player.size * 3, coords.color);
-
-
-    if(inBase(game["p1"])){
-        coords.color = "#6b9e8e"
-    }
-
-    if(inBase(game["p2"])){
-        coords.color = "#ffbd30"
-    }
-
-
+function drawBase(base){
+    rect(base.x,base.y, base.width , base.height, base.color);
 }
 
 function drawShotLine(){
@@ -174,9 +146,7 @@ function drawBullets(){
                 makeBullet(bullet.x, bullet.y, bullet.x - bullet.deltaX*10, bullet.y - bullet.deltaY*10, "#ED0014", 3) 
             }
 
-            bullet.x += bullet.deltaX*bullet.speed;
-            bullet.y += bullet.deltaY*bullet.speed;
-
+            // circle(bullet.x, bullet.y,2, "white", false) where the bullet currently is
 
             var otherPlayer = "p2";
             if(bullet.player == "p2"){ otherPlayer = "p1" }
@@ -185,6 +155,7 @@ function drawBullets(){
             if(distanceBetween(bullet.x, currentGame[otherPlayer].x, bullet.y, currentGame[otherPlayer].y) < currentGame[otherPlayer].size){
                 console.log("BOOM!");
                 hitMP3.currentTime = 0;
+                hitMP3.volume = 0.2;
                 hitMP3.play();
             }
         });
@@ -207,25 +178,6 @@ function shoot(){
         socket.emit("shoot", shot);
     }
 }
-
-function inBase(player){
-
-    var rect = {};
-
-    if(parseInt(player.player) == 1){
-        rect.x = 0;
-        rect.y = 0;
-    } else if(parseInt(player.player) == 2){
-        rect.x = (WIDTH - player.size * 4),
-        rect.y = (HEIGHT - player.size * 3);
-    }
-
-
-   // if( (player.x + player.size) < (rect.x + player.size * 4))
-
-
-}
-
 
 // LISTENERS
 

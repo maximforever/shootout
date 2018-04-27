@@ -6,3 +6,13 @@ canvas {
     cursor: crosshair;
 }
 
+.panel {
+    width: 400px;
+    margin: 10px auto;
+    border: 1px solid gray;
+    background: #ccc;
+    padding: 20px;
+    box-sizing: border-box;
+    display: flex;
+    justify-content: space-between;
+}

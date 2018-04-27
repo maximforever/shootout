@@ -10,7 +10,15 @@ var originalGame = {
         color: "#96A9D9",
         size: 10,
         hp: 100,
-        player: 1
+        player: 1,
+        bullets: 50,
+        base: {
+            color: "#6B769E",
+            width: 40,
+            height: 30,
+            x: 0,
+            y: 0
+        }
     },
     p2: {
         x: 300,
@@ -18,36 +26,40 @@ var originalGame = {
         color: "#F26DF9", 
         size: 10, 
         hp: 100,
-        player: 2
+        player: 2,
+        bullets: 50,
+        base: {
+            color: "#C900C2",
+            width: 40,
+            height: 30,
+            x: 360,             // THIS WILL BE DEPENDENT ON CANVAS SIZE
+            y: 270              
+        }
     },
     bullets: []
 }
 
 var game = JSON.parse(JSON.stringify(originalGame));         // make a deep copy
 
-function resetGame(callback){
+function resetGame(){
     game = JSON.parse(JSON.stringify(originalGame));
-    console.log("the game is now:");
-    console.log(game);
-
-    callback(game);
 }
 
 function getGame(){
     return game;
 }
 
-function movePlayer(dir, player, otherPlayer){
+function movePlayer(dir, player){
 
     dir = parseInt(dir);
-    var otherPlayer = "p2";
+    var otherPlayer = (player == "p2") ? "p1" : "p2";
+
     var newLocation = {
         x: game[player].x,
         y: game[player].y
     };
 
-    if(player == "p2"){ otherPlayer = "p1" }
-
+    // figre out where the player will be
     if(dir == 65){
         newLocation.x -= game[player].size/3;
     } else if(dir == 68){
@@ -68,6 +80,7 @@ function movePlayer(dir, player, otherPlayer){
         console.log("colliding");
     }
 
+    // don't let the player go off the map
     if(game[player].y < game[player].size){  game[player].y = game[player].size  }
     if(game[player].y > (300 - game[player].size)){  game[player].y = (300 - game[player].size) }
     if(game[player].x < game[player].size){  game[player].x = game[player].size }
@@ -75,7 +88,36 @@ function movePlayer(dir, player, otherPlayer){
 
 }
 
-function createBullet(target, thisPlayer, io, socket){
+function healPlayer(player){
+
+    player = game[player];
+
+    if(player.x > player.base.x && player.x < (player.base.x + player.base.width) && player.y > player.base.y && player.y < (player.base.y + player.base.height)){
+
+        player.hp += 0.1           // 2 HP/second
+        if(player.hp > 100){  player.hp = 100 }
+
+        //console.log(player.hp);
+
+        if(player.player == 1){ player.base.color = "#5ce0af" }
+        if(player.player == 2){ player.base.color = "#f1f7a0" }
+   
+    } else {
+        if(player.player == 1){ player.base.color = "#6b739f" }
+        if(player.player == 2){ player.base.color = "#C900C2" }
+    }
+
+
+}
+
+function createBullet(target, thisPlayer, io){
+
+
+    if(game[thisPlayer].bullets == 0){
+        return
+    }
+
+    game[thisPlayer].bullets--;
 
 
     var diffX = target.x - game[thisPlayer].x;
@@ -86,10 +128,13 @@ function createBullet(target, thisPlayer, io, socket){
     var dx = diffX/hypotenuse;
     var dy = diffY/hypotenuse;
 
+    var startingX = game[thisPlayer].x + 20*dx;
+    var startingY = game[thisPlayer].y + 20*dy;
+
 
     var bullet = {
-        x: game[thisPlayer].x,
-        y: game[thisPlayer].y,
+        x: startingX,
+        y: startingY,
         deltaX: dx,
         deltaY: dy,
         player: thisPlayer,
@@ -118,16 +163,6 @@ function createBullet(target, thisPlayer, io, socket){
                     game.bullets.splice(i, 1);
                 }
             }
-
-            var updatedGame = getGame();
-
-            var newData = {
-                game: updatedGame,
-                player: updatedGame[socket.id]
-            }
-
-            io.emit("updated game", newData);
-
         }
 
     }, 20)
@@ -139,13 +174,7 @@ function createBullet(target, thisPlayer, io, socket){
 
 function checkForBulletHits(bullet, io){
 
-    var otherPlayer = "p2";
-    if(bullet.player == "p2"){ otherPlayer = "p1" }
-
-    console.log("player:  " + bullet.player + " - other player: " + otherPlayer); 
-
-
-    console.log(distanceBetween(bullet.x, game[otherPlayer].x, bullet.y, game[otherPlayer].y));
+    var otherPlayer = (bullet.player == "p2") ? "p1" : "p2";
 
     if(distanceBetween(bullet.x, game[otherPlayer].x, bullet.y, game[otherPlayer].y) < game[otherPlayer].size){
 
@@ -180,3 +209,4 @@ module.exports.getGame = getGame;
 module.exports.movePlayer = movePlayer;
 module.exports.resetGame = resetGame;
 module.exports.createBullet = createBullet;
+module.exports.healPlayer = healPlayer;

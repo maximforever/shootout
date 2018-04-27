@@ -32,6 +32,7 @@ var thisGame = {
 
 
 
+
 if(process.env.LIVE){                                                                           // this is how I do config, folks. put away your pitforks, we're all learning here.
     dbAddress = "mongodb://" + process.env.MLAB_USERNAME + ":" + process.env.MLAB_PASSWORD + "@ds157639.mlab.com:57639/shootout";
 } else {
@@ -85,9 +86,6 @@ MongoClient.connect(dbAddress, function(err, db){
 
     io.on('connection', function(socket){
 
-        console.log("pre join");
-        console.log(thisGame);
-
         if(!thisGame.p1){
             thisGame.p1 = true;
             thisGame[socket.id] = "p1"
@@ -96,8 +94,21 @@ MongoClient.connect(dbAddress, function(err, db){
             thisGame[socket.id] = "p2"
         }
 
-        console.log("post join");
-        console.log(thisGame);
+        var thisConnection = setInterval(function(){
+
+            var updatedGame = game.getGame();
+
+            var newData = {
+                game: updatedGame,
+                player: thisGame[socket.id]
+            }
+
+            io.emit("updated game", newData);
+
+            game.healPlayer(thisGame[socket.id]);
+
+
+        }, 20)
 
 
         console.log("a user connected");
@@ -105,6 +116,8 @@ MongoClient.connect(dbAddress, function(err, db){
         console.log("User count is now: " + userCount);
 
         socket.on("disconnect", function(){
+
+            clearInterval(thisConnection);
 
             thisGame[thisGame[socket.id]] = false;
             delete thisGame[socket.id];  
@@ -119,75 +132,23 @@ MongoClient.connect(dbAddress, function(err, db){
 
             if(userCount == 0){
                 console.log("resetting game!");
-                game.resetGame(function(updatedGame){
-                    var newData = {
-                        game: updatedGame,
-                        player: thisGame[socket.id]
-                    }
-
-                    io.emit("updated game", newData);
-                });
-
+                game.resetGame();
             }
         });
 
-        socket.on("update game", function(){
-            console.log("getting updated game");
-
-            var updatedGame = game.getGame();
-
-            var newData = {
-                game: updatedGame,
-                player: thisGame[socket.id]
-            }
-
-            io.emit("updated game", newData);
-        })
-
         socket.on("reset game", function(){
             console.log("resetting game");
-            game.resetGame(function(updatedGame){
-                var newData = {
-                    game: updatedGame,
-                    player: thisGame[socket.id]
-                }
-
-                console.log(newData);
-
-                io.emit("updated game", newData);
-            });
+            game.resetGame();
         })
 
         socket.on("move player", function(dir){
-
             game.movePlayer(dir, thisGame[socket.id]);
-            var updatedGame = game.getGame();
-
-
-            var updatedGame = game.getGame();
-
-            var newData = {
-                game: updatedGame,
-                player: thisGame[socket.id]
-            }
-
-            io.emit("updated game", newData);
         })
 
         socket.on("shoot", function(target){
 
-            console.log("shooting!");
-
-            game.createBullet(target, thisGame[socket.id], io, socket);         // this is messy
-
-            var updatedGame = game.getGame();
-
-            var newData = {
-                game: updatedGame,
-                player: thisGame[socket.id]
-            }
-
-            io.emit("updated game", newData);
+            console.log("app.js - shoot!");
+            game.createBullet(target, thisGame[socket.id], io);         // this is messy
         })
             
 

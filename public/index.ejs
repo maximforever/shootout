@@ -6,6 +6,7 @@
         <meta name="viewport" content="initial-scale=1, maximum-scale=1">
         <meta name="description" content="This will be a description">
 
+        <link href="https://use.fontawesome.com/releases/v5.0.6/css/all.css" rel="stylesheet">
 
         <link rel = "stylesheet" type = "text/css" href ="stylesheet.css"/>
         <link rel="shortcut icon" type="image/png" href="assets/icon.png">
@@ -13,10 +14,18 @@
 
     <BODY>
     
-            <button id = "update">Get Updated Game</button>
+            <div class = "panel" id = "resources">
+                <span class = "one-resource"><i class="fas fa-fire"></i> <span id = "bullet-count">318</span></span>
+                <span class = "one-resource"><i class="fas fa-fire"></i> 2</span>
+                <span class = "one-resource"><i class="fas fa-fire"></i> 1</span>
+                <span class = "one-resource"><i class="fas fa-fire"></i> 5</span>
+            </div>
+            
             <canvas id = "canvas" width = "400" height="300"></canvas>
-            <p>Bullets: <span id = "bulletCount"></span></p>
 
+            <div class = "panel" id = "shop"></div>
+
+            <button id = "update">Get Updated Game</button>
             <button id = "reset">Reset Game</button>
 
 
