@@ -117,7 +117,7 @@ function createBullet(target, thisPlayer, io){
         return
     }
 
-    game[thisPlayer].bullets--;
+    //game[thisPlayer].bullets--;
 
 
     var diffX = target.x - game[thisPlayer].x;
