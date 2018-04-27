@@ -94,16 +94,19 @@ MongoClient.connect(dbAddress, function(err, db){
             thisGame[socket.id] = "p2"
         }
 
+
+
         var thisConnection = setInterval(function(){
 
             var updatedGame = game.getGame();
+
 
             var newData = {
                 game: updatedGame,
                 player: thisGame[socket.id]
             }
 
-            io.emit("updated game", newData);
+            socket.emit("updated game", newData)
 
             game.healPlayer(thisGame[socket.id]);
 

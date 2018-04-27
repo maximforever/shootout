@@ -12,6 +12,7 @@ var originalGame = {
         hp: 100,
         player: 1,
         bullets: 50,
+        money: 10,
         base: {
             color: "#6B769E",
             width: 40,
@@ -28,6 +29,7 @@ var originalGame = {
         hp: 100,
         player: 2,
         bullets: 50,
+        money: 10,
         base: {
             color: "#C900C2",
             width: 40,
@@ -74,8 +76,15 @@ function movePlayer(dir, player){
 
     // only move players if the new location doesn't collide with the other player
     if(distanceBetween(newLocation.x, game[otherPlayer].x, newLocation.y, game[otherPlayer].y) > (game.p1.size + game.p2.size )){
-        game[player].x = newLocation.x;
-        game[player].y = newLocation.y;
+       
+
+        //can't go onto the opponent's base
+        if(otherPlayer && !(newLocation.x > game[otherPlayer].base.x && newLocation.x < (game[otherPlayer].base.x + game[otherPlayer].base.width) && newLocation.y > game[otherPlayer].base.y && newLocation.y < (game[otherPlayer].base.y + game[otherPlayer].base.height))){
+            game[player].x = newLocation.x;
+            game[player].y = newLocation.y;
+        }
+
+
     } else {
         console.log("colliding");
     }
@@ -92,19 +101,18 @@ function healPlayer(player){
 
     player = game[player];
 
-    if(player.x > player.base.x && player.x < (player.base.x + player.base.width) && player.y > player.base.y && player.y < (player.base.y + player.base.height)){
+    if(player && player.x > player.base.x && player.x < (player.base.x + player.base.width) && player.y > player.base.y && player.y < (player.base.y + player.base.height)){
 
-        player.hp += 0.1           // 2 HP/second
+        player.hp += 0.1;           // 2 HP/second
+
         if(player.hp > 100){  player.hp = 100 }
-
-        //console.log(player.hp);
 
         if(player.player == 1){ player.base.color = "#5ce0af" }
         if(player.player == 2){ player.base.color = "#f1f7a0" }
    
     } else {
-        if(player.player == 1){ player.base.color = "#6b739f" }
-        if(player.player == 2){ player.base.color = "#C900C2" }
+        if(player && player.player == 1){ player.base.color = "#6b739f" }
+        if(player && player.player == 2){ player.base.color = "#C900C2" }
     }
 
 
@@ -113,7 +121,7 @@ function healPlayer(player){
 function createBullet(target, thisPlayer, io){
 
 
-    if(game[thisPlayer].bullets == 0){
+    if(game[thisPlayer] && game[thisPlayer].bullets == 0){
         return
     }
 

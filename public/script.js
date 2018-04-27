@@ -102,8 +102,21 @@ function drawBoard(game){
     drawShotLine();
     drawBullets();
 
-    if(typeof(game.bullets) != "undefined"){
-        $("#bullet-count").text(game[thisPlayer].bullets);
+
+
+
+    var player = game[thisPlayer];
+
+    if(player && typeof(player.bullets) != "undefined"){
+        $("#bullet-count").text(player.bullets);
+    }
+
+    if(player && typeof(player.money) != "undefined"){
+        $("#money-count").text(player.money);
+    }
+
+    if(player && typeof(player.hp) != "undefined"){
+        $("#health-count").text(Math.floor(player.hp));
     }
 
 }
@@ -241,6 +254,8 @@ socket.on('updated game', function(newData){
     currentGame = newData.game;
     thisPlayer = newData.player;
 });
+
+
 
 socket.on('updated bullet locations', function(updatedBullets){
     currentGame.bullets = updatedBullets;
