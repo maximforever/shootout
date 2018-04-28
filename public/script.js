@@ -24,6 +24,14 @@ var currentGame = {
 }
 
 
+// load up images for canvas 
+var healthImage = new Image();
+healthImage.src = "assets/icons/health.png";
+
+var moneyImage = new Image();
+moneyImage.src = "assets/icons/money.png";
+
+
 /* audio */
 
 var zapMP3 = new Audio('assets/zap.mp3');
@@ -90,12 +98,12 @@ function drawBoard(game){
     sendMovement();
 
     if(game.p1){ 
-        drawBase(game.p1.base)
+        drawBase("p1")
         drawPlayer(game.p1) 
     }
 
     if(game.p2){ 
-        drawBase(game.p2.base)
+        drawBase("p2")
         drawPlayer(game.p2) 
     }
 
@@ -140,8 +148,11 @@ function drawPlayer(player){
     }
 }
 
-function drawBase(base){
-    rect(base.x,base.y, base.width , base.height, base.color);
+function drawBase(player){
+    var base = currentGame[player].base;
+
+    rect(base.x, base.y, base.width , base.height, base.color);
+    drawBaseType(player);
 }
 
 function drawShotLine(){
@@ -347,6 +358,23 @@ function makeBullet(x1, y1, x2, y2, color, width){
 
     ctx.globalAlpha = 1;
     ctx.shadowColor = "transparent";
+}
+
+
+function drawBaseType(player){
+
+    var image;
+
+    if(currentGame[player].collecting == "money"){
+        image = healthImage;
+    } else if(currentGame[player].collecting == "health"){
+        image = moneyImage;
+    } else {
+        console.log(currentGame[player].collecting);
+    }
+
+    ctx.drawImage(image, (currentGame[player].base.x + currentGame[player].base.width/2) - 20/2, (currentGame[player].base.y + currentGame[player].base.height/2) - 20/2, 20, 20);
+
 }
 
 

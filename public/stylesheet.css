@@ -8,10 +8,10 @@ canvas {
 
 .panel {
     width: 400px;
-    margin: 10px auto;
+    margin: 0px auto 10px auto;
     border: 1px solid gray;
     background: #ccc;
-    padding: 20px;
+    padding: 10px 20px;
     box-sizing: border-box;
     display: flex;
     justify-content: space-between;

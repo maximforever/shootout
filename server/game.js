@@ -13,6 +13,9 @@ var originalGame = {
         player: 1,
         bullets: 50,
         money: 10,
+        collecting: "health",
+        moneyRate: 0.1,
+        healthRate: 0.1,
         base: {
             color: "#6B769E",
             width: 40,
@@ -30,6 +33,9 @@ var originalGame = {
         player: 2,
         bullets: 50,
         money: 10,
+        collecting: "health",
+        moneyRate: 0.1,
+        healthRate: 0.1,
         base: {
             color: "#C900C2",
             width: 40,
@@ -77,13 +83,14 @@ function movePlayer(dir, player){
     // only move players if the new location doesn't collide with the other player
     if(distanceBetween(newLocation.x, game[otherPlayer].x, newLocation.y, game[otherPlayer].y) > (game.p1.size + game.p2.size )){
        
-
         //can't go onto the opponent's base
-        if(otherPlayer && !(newLocation.x > game[otherPlayer].base.x && newLocation.x < (game[otherPlayer].base.x + game[otherPlayer].base.width) && newLocation.y > game[otherPlayer].base.y && newLocation.y < (game[otherPlayer].base.y + game[otherPlayer].base.height))){
+        if(otherPlayer){ 
+
+            // figure this out!
+
             game[player].x = newLocation.x;
             game[player].y = newLocation.y;
         }
-
 
     } else {
         console.log("colliding");
@@ -101,9 +108,9 @@ function healPlayer(player){
 
     player = game[player];
 
-    if(player && player.x > player.base.x && player.x < (player.base.x + player.base.width) && player.y > player.base.y && player.y < (player.base.y + player.base.height)){
+    if(player && player.collecting == "health" && player.x > player.base.x && player.x < (player.base.x + player.base.width) && player.y > player.base.y && player.y < (player.base.y + player.base.height)){
 
-        player.hp += 0.1;           // 2 HP/second
+        player.hp += player.healthRate;                     // 0.1 = 2 HP/second
 
         if(player.hp > 100){  player.hp = 100 }
 
@@ -118,6 +125,13 @@ function healPlayer(player){
 
 }
 
+function makeMoney(player){
+    if(player && player.collecting == "money"){
+        player.money += player.moneyRate; 
+    }
+}
+
+
 function createBullet(target, thisPlayer, io){
 
 
@@ -125,7 +139,7 @@ function createBullet(target, thisPlayer, io){
         return
     }
 
-    //game[thisPlayer].bullets--;
+    game[thisPlayer].bullets--;
 
 
     var diffX = target.x - game[thisPlayer].x;
@@ -155,6 +169,7 @@ function createBullet(target, thisPlayer, io){
     var bulletMove = setInterval(function(){
 
         checkForBulletHits(bullet, io);
+        checkForBaseHits(bullet)
 
         if(bullet.x < 400 && bullet.x > 0 && bullet.y < 300 && bullet.y > 0 && !bullet.hit){
             bullet.x += bullet.deltaX*bullet.speed;
@@ -200,6 +215,25 @@ function checkForBulletHits(bullet, io){
     }
 }
 
+function checkForBaseHits(bullet){
+
+    var player = bullet.player;
+
+    // no need to check whose bullet hits the base, because it's only checking the base of the player that fired the bullet
+
+    // if a bullet hits the base...
+    if(bullet.x > game[player].base.x && bullet.x < (game[player].base.x + game[player].base.width) && bullet.y > game[player].base.y && bullet.y < (game[player].base.y + game[player].base.height)){
+
+        bullet.hit = true;
+
+        var newMode = (game[player].collecting == "health") ? "money" : "health";
+        game[player].collecting = newMode;
+
+        console.log("Now collecting " + newMode);
+    }
+
+}
+
 
 
 
@@ -218,3 +252,4 @@ module.exports.movePlayer = movePlayer;
 module.exports.resetGame = resetGame;
 module.exports.createBullet = createBullet;
 module.exports.healPlayer = healPlayer;
+module.exports.makeMoney = makeMoney;

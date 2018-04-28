@@ -98,6 +98,8 @@ MongoClient.connect(dbAddress, function(err, db){
 
         var thisConnection = setInterval(function(){
 
+            // this is effectively the game loop
+
             var updatedGame = game.getGame();
 
 
@@ -109,6 +111,7 @@ MongoClient.connect(dbAddress, function(err, db){
             socket.emit("updated game", newData)
 
             game.healPlayer(thisGame[socket.id]);
+            game.makeMoney(thisGame[socket.id]);
 
 
         }, 20)
