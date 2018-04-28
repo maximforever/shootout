@@ -120,7 +120,7 @@ function drawBoard(game){
     }
 
     if(player && typeof(player.money) != "undefined"){
-        $("#money-count").text(player.money);
+        $("#money-count").text(Math.floor(player.money));
     }
 
     if(player && typeof(player.hp) != "undefined"){
@@ -218,6 +218,11 @@ $("#canvas").on("mousemove", function(e){
 
     lastX = e.pageX - $("#canvas").offset().left;
     lastY = e.pageY - $("#canvas").offset().top;
+});
+
+
+$("#buy-bullets").on("click", function(){
+    socket.emit("buy bullets");
 });
 
 
@@ -365,11 +370,12 @@ function drawBaseType(player){
 
     var image;
 
-    if(currentGame[player].collecting == "money"){
+    if(currentGame[player].collecting == "health"){
         image = healthImage;
-    } else if(currentGame[player].collecting == "health"){
+    } else if(currentGame[player].collecting == "money"){
         image = moneyImage;
     } else {
+        console.log("Currently collecting: ");
         console.log(currentGame[player].collecting);
     }
 

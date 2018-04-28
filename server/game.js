@@ -126,6 +126,7 @@ function healPlayer(player){
 }
 
 function makeMoney(player){
+    player = game[player];
     if(player && player.collecting == "money"){
         player.money += player.moneyRate; 
     }
@@ -234,6 +235,23 @@ function checkForBaseHits(bullet){
 
 }
 
+// BUY FUNCTIONS
+
+
+function buyBullets(player){
+    player = game[player];
+        
+    if(player.money >= 100){
+
+        player.money -= 100;
+        player.bullets += 50;
+
+    } else {
+        console.log("not enough money");
+    }
+
+}
+
 
 
 
@@ -253,3 +271,4 @@ module.exports.resetGame = resetGame;
 module.exports.createBullet = createBullet;
 module.exports.healPlayer = healPlayer;
 module.exports.makeMoney = makeMoney;
+module.exports.buyBullets = buyBullets;

@@ -152,9 +152,11 @@ MongoClient.connect(dbAddress, function(err, db){
         })
 
         socket.on("shoot", function(target){
-
-            console.log("app.js - shoot!");
             game.createBullet(target, thisGame[socket.id], io);         // this is messy
+        })
+
+        socket.on("buy bullets", function(target){
+            game.buyBullets(thisGame[socket.id]);         // this is messy
         })
             
 
