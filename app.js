@@ -138,13 +138,13 @@ MongoClient.connect(dbAddress, function(err, db){
 
             if(userCount == 0){
                 console.log("resetting game!");
-                game.resetGame();
+                game.newGame();
             }
         });
 
         socket.on("reset game", function(){
             console.log("resetting game");
-            game.resetGame();
+            game.newGame();
         })
 
         socket.on("move player", function(dir){

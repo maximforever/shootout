@@ -31,6 +31,11 @@ healthImage.src = "assets/icons/health.png";
 var moneyImage = new Image();
 moneyImage.src = "assets/icons/money.png";
 
+var mountains = new Image();
+mountains.src = "assets/patterns/mountains2.png";
+
+
+
 
 /* audio */
 
@@ -107,8 +112,12 @@ function drawBoard(game){
         drawPlayer(game.p2) 
     }
 
+    drawObstacles();
+
     drawShotLine();
     drawBullets();
+
+
 
 
 
@@ -117,6 +126,12 @@ function drawBoard(game){
 
     if(player && typeof(player.bullets) != "undefined"){
         $("#bullet-count").text(player.bullets);
+
+        if(player.bullets < 10 ){
+            $("#bullet-count").css("color", "red").css("font-weight", "bold");
+        } else {
+            $("#bullet-count").css("color", "black").css("font-weight", "normal");
+        }
     }
 
     if(player && typeof(player.money) != "undefined"){
@@ -140,7 +155,6 @@ function drawPlayer(player){
     var healthBarWidth = player.size*2 + 10;                // those extra 10 px make the players look a little nicer              
     var healthWidth = player.hp/100*healthBarWidth;
 
-
     rect(player.x - player.size - 5, player.y - player.size*2, healthBarWidth, 5, "red", true);
     
     if(player.hp >= 0){
@@ -150,9 +164,37 @@ function drawPlayer(player){
 
 function drawBase(player){
     var base = currentGame[player].base;
-
     rect(base.x, base.y, base.width , base.height, base.color);
+
+    var startingY = (player == "p2") ? (currentGame[player].base.y - 5) : (currentGame[player].base.y + base.height);
+
+    var healthBarWidth = base.width;                // those extra 10 px make the players look a little nicer              
+    var healthWidth = base.hp/1000*healthBarWidth;
+
+    rect(base.x, startingY, healthBarWidth, 5, "red", true);
+    
+    if(base.hp >= 0){
+        rect(base.x, startingY, healthWidth, 5, "green", false);
+    }
+
+
+
     drawBaseType(player);
+}
+
+function drawObstacles(){
+
+
+
+    if(currentGame.obstacles){
+
+        currentGame.obstacles.forEach(function(obstacle){
+            var mountainPattern = ctx.createPattern(mountains, 'repeat');
+            rect(obstacle.x, obstacle.y, obstacle.width, obstacle.height, "black" ); //mountainPattern);
+        })
+
+    }
+
 }
 
 function drawShotLine(){
@@ -177,11 +219,20 @@ function drawBullets(){
 
 
             if(distanceBetween(bullet.x, currentGame[otherPlayer].x, bullet.y, currentGame[otherPlayer].y) < currentGame[otherPlayer].size){
-                console.log("BOOM!");
                 hitMP3.currentTime = 0;
                 hitMP3.volume = 0.2;
                 hitMP3.play();
+            } else if(inRectangle(bullet.x, bullet.y, currentGame[otherPlayer].base)){
+                hitMP3.currentTime = 0;
+                hitMP3.volume = 0.2;
+                hitMP3.play();
+            } else if(checkForObstacleHits(bullet)){
+                console.log("thud");
+                thumpMP3.currentTime = 0;
+                thumpMP3.volume = 0.2;
+                thumpMP3.play();
             }
+            
         });
     } 
 
@@ -189,7 +240,8 @@ function drawBullets(){
 
 function shoot(){
 
-    if(currentGame.status != "gameover"){
+
+    if(currentGame.status != "gameover" && currentGame[thisPlayer].bullets > 0){
 
         zapMP3.currentTime = 0;
         zapMP3.play();
@@ -393,4 +445,25 @@ function randBetween(min, max){
 
 function distanceBetween(x1, x2, y1, y2){
     return Math.sqrt(Math.pow((x1-x2),2) + Math.pow((y1-y2),2));
+}
+
+function inRectangle(x, y, rect){
+    var colliding = false;
+
+        if(x > rect.x && x < (rect.x + rect.width) && y > rect.y && y < (rect.y + rect.height)){
+            colliding = true;
+        }
+
+    return colliding;
+}
+
+function checkForObstacleHits(bullet){
+
+    var hitObstacle = false;
+
+    currentGame.obstacles.forEach(function(obstacle){
+        if(inRectangle(bullet.x, bullet.y, obstacle)){ hitObstacle = true; }
+    });
+    
+    return hitObstacle;
 }

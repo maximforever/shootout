@@ -5,8 +5,8 @@ var originalGame = {
     width: 0,
     height: 0, 
     p1: {
-        x: 50,
-        y: 50,
+        x: 80,
+        y: 60,
         color: "#96A9D9",
         size: 10,
         hp: 100,
@@ -21,7 +21,8 @@ var originalGame = {
             width: 40,
             height: 30,
             x: 0,
-            y: 0
+            y: 0,
+            hp: 1000
         }
     },
     p2: {
@@ -41,17 +42,80 @@ var originalGame = {
             width: 40,
             height: 30,
             x: 360,             // THIS WILL BE DEPENDENT ON CANVAS SIZE
-            y: 270              
+            y: 270,
+            hp: 1000              
         }
     },
+    obstacles: [],
     bullets: []
 }
 
-var game = JSON.parse(JSON.stringify(originalGame));         // make a deep copy
+var game;
 
-function resetGame(){
-    game = JSON.parse(JSON.stringify(originalGame));
+function newGame(){
+    game = JSON.parse(JSON.stringify(originalGame));    // make a deep copy
+    generateObstacles(2);
 }
+
+function generateObstacles(count){
+
+        /*
+            1. pick a random coordinate within our bounds
+            2. generate a rectangle of random height and width
+            3. ensure it doesn't overlap with existing rectangles
+            3. add to game
+        */
+
+        // bottom left
+
+        var topTries = 0;
+        var bottomTries = 0;
+        var topObstacles = 0;
+        var bottomObstacles = 0;
+
+        while(topObstacles <= count && topTries < 100){  
+            var thisObstace = {
+                x: randBetween(0 , 150),            // 50 less than width/height so triangles show up
+                y: randBetween(150, 250),
+                width: randBetween(20, 50),
+                height: randBetween(20, 50)
+            };
+
+            if(!rectanglesCollide(thisObstace)){
+                console.log("generated top obstacle #" + topObstacles + " on try " + topTries);
+                game.obstacles.push(thisObstace);
+                topObstacles++;
+            } else {
+                topTries++;
+            }
+        }
+
+        while(bottomObstacles <= count && bottomTries < 100){  
+
+            var thisObstace = {
+                x: randBetween(200, 350),            // 50 less than width/height so triangles show up
+                y: randBetween(0, 150),
+                width: randBetween(20, 100),
+                height: randBetween(20, 100)
+            };
+
+            if(!rectanglesCollide(thisObstace)){
+                console.log("generated bottom obstacle #" + bottomObstacles + " on try " + bottomTries);
+                game.obstacles.push(thisObstace);
+                bottomObstacles++;
+            } else {
+                bottomTries++;
+            }
+        }
+
+
+        
+}
+
+
+
+
+var game = JSON.parse(JSON.stringify(originalGame));         
 
 function getGame(){
     return game;
@@ -80,20 +144,32 @@ function movePlayer(dir, player){
         console.log("move error");
     }
 
+    var canGoThere = true;
+
     // only move players if the new location doesn't collide with the other player
-    if(distanceBetween(newLocation.x, game[otherPlayer].x, newLocation.y, game[otherPlayer].y) > (game.p1.size + game.p2.size )){
-       
-        //can't go onto the opponent's base
-        if(otherPlayer){ 
-
-            // figure this out!
-
-            game[player].x = newLocation.x;
-            game[player].y = newLocation.y;
-        }
-
-    } else {
+    if(!distanceBetween(newLocation.x, game[otherPlayer].x, newLocation.y, game[otherPlayer].y) > (game.p1.size + game.p2.size )){
+        canGoThere = false;
         console.log("colliding");
+    }
+
+    //can't go onto the opponent's base
+    if(otherPlayer && inRectangle(newLocation.x, newLocation.y, game[otherPlayer].base)){
+        canGoThere = false;
+    }
+
+    // can't go into obstacles
+
+    var collidingWithObstacles = false;
+
+    game.obstacles.forEach(function(obstacle){
+        if(inRectangle(newLocation.x, newLocation.y, obstacle)){
+            canGoThere = false;
+        }
+    });
+
+    if(canGoThere){ 
+        game[player].x = newLocation.x;
+        game[player].y = newLocation.y;
     }
 
     // don't let the player go off the map
@@ -108,7 +184,7 @@ function healPlayer(player){
 
     player = game[player];
 
-    if(player && player.collecting == "health" && player.x > player.base.x && player.x < (player.base.x + player.base.width) && player.y > player.base.y && player.y < (player.base.y + player.base.height)){
+    if(player && player.collecting == "health" && inRectangle(player.x, player.y, player.base)){
 
         player.hp += player.healthRate;                     // 0.1 = 2 HP/second
 
@@ -162,7 +238,7 @@ function createBullet(target, thisPlayer, io){
         deltaY: dy,
         player: thisPlayer,
         speed: 3,                       // this should vary with powerups
-        damage: 5,                      // this should vary with powerups
+        damage: 1,                      // this should vary with powerups
         hit: false,
         id: Math.floor(Date.now()*Math.random())
     }
@@ -170,7 +246,8 @@ function createBullet(target, thisPlayer, io){
     var bulletMove = setInterval(function(){
 
         checkForBulletHits(bullet, io);
-        checkForBaseHits(bullet)
+        checkForBaseHits(bullet);
+        checkForObstacleHits(bullet);
 
         if(bullet.x < 400 && bullet.x > 0 && bullet.y < 300 && bullet.y > 0 && !bullet.hit){
             bullet.x += bullet.deltaX*bullet.speed;
@@ -219,11 +296,12 @@ function checkForBulletHits(bullet, io){
 function checkForBaseHits(bullet){
 
     var player = bullet.player;
+    var otherPlayer = (bullet.player == "p2") ? "p1" : "p2";
 
     // no need to check whose bullet hits the base, because it's only checking the base of the player that fired the bullet
 
     // if a bullet hits the base...
-    if(bullet.x > game[player].base.x && bullet.x < (game[player].base.x + game[player].base.width) && bullet.y > game[player].base.y && bullet.y < (game[player].base.y + game[player].base.height)){
+    if(inRectangle(bullet.x, bullet.y, game[bullet.player].base)){
 
         bullet.hit = true;
 
@@ -231,8 +309,17 @@ function checkForBaseHits(bullet){
         game[player].collecting = newMode;
 
         console.log("Now collecting " + newMode);
+    } else if(inRectangle(bullet.x, bullet.y, game[otherPlayer].base)){
+        game[otherPlayer].base.hp -= bullet.damage;
+        bullet.hit = true;
     }
 
+}
+
+function checkForObstacleHits(bullet){
+    game.obstacles.forEach(function(obstacle){
+        if(inRectangle(bullet.x, bullet.y, obstacle)){ bullet.hit = true; }
+    });
 }
 
 // BUY FUNCTIONS
@@ -255,10 +342,46 @@ function buyBullets(player){
 
 
 
+
 // supporting functions
 
 function distanceBetween(x1, x2, y1, y2){
     return Math.sqrt(Math.pow((x1-x2),2) + Math.pow((y1-y2),2));
+}
+
+function inRectangle(x, y, rect){
+
+    var colliding = false;
+
+        if(x > rect.x && x < (rect.x + rect.width) && y > rect.y && y < (rect.y + rect.height)){
+            colliding = true;
+        }
+
+    return colliding;
+}
+
+function rectanglesCollide(rectangle){
+
+    var colliding = false;
+
+    if(game.obstacles.length > 0){
+
+        // check every point of the rectangle for collision
+        game.obstacles.forEach(function(obstacle){
+            if(inRectangle(rectangle.x, rectangle.y, obstacle)){ colliding = true; }
+            if(inRectangle(rectangle.x + rectangle.width, rectangle.y, obstacle)){ colliding = true; }
+            if(inRectangle(rectangle.x, rectangle.y + rectangle.height , obstacle)){ colliding = true; }
+            if(inRectangle(rectangle.x + rectangle.width, rectangle.y + rectangle.height, obstacle)){ colliding = true; }
+        });
+    }
+
+    return colliding;
+}
+
+
+
+function randBetween(min, max){
+    return Math.floor(Math.random() * (max - min) + min);
 }
 
 
@@ -267,7 +390,7 @@ function distanceBetween(x1, x2, y1, y2){
 
 module.exports.getGame = getGame;
 module.exports.movePlayer = movePlayer;
-module.exports.resetGame = resetGame;
+module.exports.newGame = newGame;
 module.exports.createBullet = createBullet;
 module.exports.healPlayer = healPlayer;
 module.exports.makeMoney = makeMoney;
