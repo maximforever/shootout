@@ -17,23 +17,47 @@
             <canvas id = "canvas" width = "400" height="300"></canvas>
 
             <div class = "panel" id = "resources">
-                <span class = "one-resource"><i class="fas fa-plus"></i><span id = "health-count">0</span></span>
-                <span class = "one-resource"><i class="fas fa-fire"></i> <span id = "bullet-count">0</span></span>
-                <span class = "one-resource"><i class="fas fa-dollar-sign"></i> <span id = "money-count">0</span></span>
-                <span class = "one-resource"><i class="fas fa-vial"></i> <span id = "stun-count">0</span></span>
+                <div class = "panel-title">Resources</div>
+
+                <div class = "panel-container">
+                    <span class = "one-resource"><i class="fas fa-plus"></i> <span id = "health-count">0</span></span>
+                    <span class = "one-resource"><i class="fas fa-fire"></i> <span id = "bullet-count">0</span></span>
+                    <span class = "one-resource"><i class="fas fa-dollar-sign"></i> <span id = "money-count">0</span></span>
+                    
+
+                    <span class = "one-resource">
+                        <button class = "use-button" id = "activate-stun"><i class="fas fa-vial"></i>  <span id = "stun-count">0</span></button>
+                    </span>
+                    
+
+                    <span class = "one-resource">
+                        <button class = "use-button" id = "activate-invisibility"><i class="far fa-eye-slash"></i> <span id = "invisibility-count">0</span></button>
+                    </span>
+                </div>
             </div>
 
             <div class = "panel" id = "shop">
-                <div class = "one-item">
-                    <button id = "buy-bullets"><i class="fas fa-fire"></i> 50</button>
-                    <span class = "item-price">$100</span>
-                </div>
+                <div class = "panel-title">Buy</div>
 
-                <div class = "one-item">
-                    <button id = "buy-stun"><i class="fas fa-vial"></i> 1</button>
-                    <span class = "item-price">$75</span>
+                <div class = "panel-container">
+                    <div class = "one-item">
+                        <button class = "buy-button" id = "buy-bullets"><i class="fas fa-fire"></i> 50</button>
+                        <span class = "item-price">$75</span>
+                    </div>
+
+                    <div class = "one-item">
+                        <button class = "buy-button" id = "buy-stuns"><i class="fas fa-vial"></i> 1</button>
+                        <span class = "item-price">$100</span>
+                    </div>
+
+                    <div class = "one-item">
+                        <button class = "buy-button" id = "buy-invisibility"><i class="far fa-eye-slash"></i> 1</button>
+                        <span class = "item-price">$200</span>
+                    </div>
                 </div>
             </div>
+
+            
 
             <div id = "other-buttons">
                 <button id = "update">Get Updated Game</button>

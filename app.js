@@ -163,8 +163,16 @@ MongoClient.connect(dbAddress, function(err, db){
             game.buy(thisGame[socket.id], "stuns", socket);         // this is messy
         })
 
+        socket.on("buy invisibility", function(target){
+            game.buy(thisGame[socket.id], "invisibility", socket);         // this is messy
+        })
+
         socket.on("activate stun", function(target){
             game.activateStun(thisGame[socket.id]); 
+        })
+
+        socket.on("activate invisibility", function(target){
+            game.activateInvisibility(thisGame[socket.id], io); 
         })
             
 

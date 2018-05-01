@@ -55,6 +55,7 @@ var shieldCollectMP3 = new Audio('assets/shieldCollect.mp3');
 
 
 var cashRegisterMP3 = new Audio('assets/cash.mp3');
+var whooshMP3 = new Audio('assets/whoosh.mp3');
 
 
 
@@ -149,9 +150,22 @@ function drawBoard(game){
         $("#health-count").text(Math.floor(player.hp));
     }
 
-    if(player){
+    if(player && typeof(player.stuns) != "undefined"){
         $("#stun-count").text(Math.floor(player.stuns));
     }
+
+    if(player && typeof(player.invisibility) != "undefined"){
+        $("#invisibility-count").text(Math.floor(player.invisibility));
+    }
+
+    if(player && player.invisibilityEndTime > Date.now()){
+        $("use-invisibility").prop("disabled",true);    
+    }
+
+    if(player && player.stunBulletEndTime > Date.now()){
+        $("use-stuns").prop("disabled",true);    
+    }
+    
 
 }
 
@@ -171,18 +185,33 @@ function drawPlayer(player){
         }
     }
 
+    if(player.invisibilityEndTime > Date.now()){
+        player.color = "rgba(255, 255, 255, 0)";
 
-    circle(player.x, player.y, player.size, player.color, false);
+        if(("p" + player.player) == thisPlayer){
+            circle(player.x, player.y, player.size, player.color, true);
+        } else {
+            circle(player.x, player.y, player.size, player.color, false);
+        }
 
 
-    var healthBarWidth = player.size*2 + 10;                // those extra 10 px make the players look a little nicer              
-    var healthWidth = player.hp/100*healthBarWidth;
+    } else {
 
-    rect(player.x - player.size - 5, player.y - player.size*2, healthBarWidth, 5, "red", true);
-    
-    if(player.hp >= 0){
-        rect(player.x - player.size - 5, player.y - player.size*2, healthWidth, 5, "green", false);
+        circle(player.x, player.y, player.size, player.color, false);
+
+        var healthBarWidth = player.size*2 + 10;                // those extra 10 px make the players look a little nicer              
+        var healthWidth = player.hp/100*healthBarWidth;
+
+        rect(player.x - player.size - 5, player.y - player.size*2, healthBarWidth, 5, "red", true);
+        
+        if(player.hp >= 0){
+            rect(player.x - player.size - 5, player.y - player.size*2, healthWidth, 5, "green", false);
+        }
     }
+
+    
+    
+    
 }
 
 function drawBase(player){
@@ -300,8 +329,12 @@ $("#buy-bullets").on("click", function(){
     socket.emit("buy bullets");
 });
 
-$("#buy-stun").on("click", function(){
+$("#buy-stuns").on("click", function(){
     socket.emit("buy stuns");
+});
+
+$("#buy-invisibility").on("click", function(){
+    socket.emit("buy invisibility");
 });
 
 
@@ -320,16 +353,17 @@ $("body").on("keydown", function(e){
     if(e.which == 65) { keypressLeft = true }
     if(e.which == 68) { keypressDown = true }
     if(e.which == 83) { keypressRight = true }
-    if(e.which == 87) { keypressUp = true }
+    if(e.which == 87) { keypressUp = true }          
+
+});
 
 
+$("body").on("click", "#activate-stun", function(){
+    socket.emit("activate stun");
+});
 
-    // stun 
-
-    if(e.which == 49){          // keypad - 1
-        socket.emit("activate stun")
-    }               
-
+$("body").on("click", "#activate-invisibility", function(){
+    socket.emit("activate invisibility");
 });
 
 $("body").on("keyup", function(e){
@@ -376,6 +410,13 @@ socket.on('successful purchase', function(player){
 });
 
 
+socket.on('successful invisibility', function(player){
+    whooshMP3.currentTime = 0;
+    whooshMP3.volume = 0.2;
+    whooshMP3.play();
+});
+
+
 
 
 
@@ -396,8 +437,9 @@ function circle(x,y,r, color, stroke) {
     ctx.fillStyle = color;
 
     if(stroke){
+        ctx.globalAlpha = 1;
         ctx.strokeStyle = "black";
-        ctx.lineWidth = 2;
+        ctx.lineWidth = 1;
         ctx.stroke();
     }
 

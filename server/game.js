@@ -14,6 +14,7 @@ var originalGame = {
         bullets: 50,
         money: 1000,
         stuns: 0,
+        invisibility: 0,
         collecting: "health",
         moneyRate: 0.1,
         healthRate: 0.1,
@@ -26,7 +27,8 @@ var originalGame = {
             hp: 1000
         },
         stunBulletEndTime: 0,
-        stunnedEndTime: 0
+        stunnedEndTime: 0,
+        invisibilityEndTime: 0
     },
     p2: {
         x: 300,
@@ -38,6 +40,7 @@ var originalGame = {
         bullets: 50,
         money: 1000,
         stuns: 0,
+        invisibility: 0,
         collecting: "health",
         moneyRate: 0.1,
         healthRate: 0.1,
@@ -50,7 +53,8 @@ var originalGame = {
             hp: 1000              
         },
         stunBulletEndTime: 0,
-        stunnedEndTime: 0
+        stunnedEndTime: 0,
+        invisibilityEndTime: 0
     },
     obstacles: [],
     bullets: []
@@ -251,7 +255,7 @@ function createBullet(target, thisPlayer, io){
         player: thisPlayer,
         stun: false,
         speed: 3,                       // this should vary with powerups
-        damage: 1,                      // this should vary with powerups
+        damage: 5,                      // this should vary with powerups
         hit: false,
         id: Math.floor(Date.now()*Math.random())
     }
@@ -360,10 +364,20 @@ function buy(player, item, socket){
             amount: 50
         }
     } else if(item == "stuns"){
+
         thisItem = {
             cost: 100,
             amount: 1
         }
+        
+    } else if(item == "invisibility"){
+
+        thisItem = {
+            cost: 200,
+            amount: 1
+        }
+    
+
     }
 
 
@@ -372,7 +386,7 @@ function buy(player, item, socket){
 
         socket.emit("successful purchase")
 
-        player.money -= 100;
+        player.money -= thisItem.cost;
         player[item] += thisItem.amount;
 
     } else {
@@ -387,9 +401,22 @@ function buy(player, item, socket){
 
 function activateStun(player){
 
-    if(game[player].stuns > 0){
+    if(game[player].stuns > 0 && game[player].stunBulletEndTime <= Date.now()){           // if player not currently stunning
         game[player].stuns--;
         game[player].stunBulletEndTime = (Date.now() + 1000 * 10);         // 10 secs of stun
+    }
+}
+
+function activateInvisibility(player, io){
+
+    console.log(Date.now());
+    console.log(game[player].invisibilityEndTime);
+
+    if(game[player].invisibility > 0 && game[player].invisibilityEndTime <= Date.now()){ // if player not currently invisible
+        game[player].invisibility--;
+        game[player].invisibilityEndTime = (Date.now() + 1000 * 10);         // 10 secs of invisibility
+    
+        io.emit("successful invisibility");
     }
 }
 
@@ -449,3 +476,4 @@ module.exports.makeMoney = makeMoney;
 module.exports.buy = buy;
 
 module.exports.activateStun = activateStun;
+module.exports.activateInvisibility = activateInvisibility;

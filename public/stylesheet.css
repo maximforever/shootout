@@ -6,6 +6,15 @@ canvas {
     cursor: crosshair;
 }
 
+button:focus {
+    outline:0;
+}
+
+button:disabled {
+    background: #929292;
+    color: #393939;
+}
+
 .panel {
     width: 400px;
     margin: 0px auto 10px auto;
@@ -14,7 +23,13 @@ canvas {
     padding: 10px 20px;
     box-sizing: border-box;
     display: flex;
+    flex-direction: column;
+}
+
+.panel-container {
+    display: flex;
     justify-content: space-between;
+    align-items: center;
 }
 
 .one-item {
@@ -29,4 +44,51 @@ canvas {
     font-weight: bold;
 }
 
+
+.use-button {
+    height: 22px;
+    width: 50px;
+    border: none;
+    background: #ffe7bc;
+    box-shadow: 0 0 5px #5a5a5a;
+    border-radius: 5px;
+    font-size: 0.9rem;
+}
+
+.use-button:hover:not([disabled]) {
+    background: #ffa637;
+}
+
+.use-button:active:not([disabled]) {
+    background: #172256;
+    color: white;
+}
+
+.buy-button {
+    height: 22px;
+    width: 50px;
+    border: none;
+    background: #C8E9EB;
+    box-shadow: 0 0 5px #5a5a5a;
+    border-radius: 5px;
+    font-size: 0.9rem;
+}
+
+.buy-button:hover:not([disabled]) {
+    background: #58CBEC;
+}
+
+.use-button:active:not([disabled]) {
+    background: #562120;
+    color: white;
+}
+
+.panel-title {
+    text-transform: uppercase;
+    color: #5f5d5d;
+    text-shadow: 0 0 3px rgba(10, 10, 10, 0.3);
+    text-align: center;
+    padding-bottom: 10px;
+    font-weight: bold;
+}
 
