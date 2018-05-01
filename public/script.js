@@ -53,6 +53,13 @@ var hyperCollectMP3 = new Audio('assets/hyperCollect.mp3');
 var berserkCollectMP3 = new Audio('assets/berserkCollect.mp3');
 var shieldCollectMP3 = new Audio('assets/shieldCollect.mp3');
 
+
+var cashRegisterMP3 = new Audio('assets/cash.mp3');
+
+
+
+
+
 // launch game
 $(document).ready(main);
     
@@ -142,6 +149,10 @@ function drawBoard(game){
         $("#health-count").text(Math.floor(player.hp));
     }
 
+    if(player){
+        $("#stun-count").text(Math.floor(player.stuns));
+    }
+
 }
 
 function drawBackround(color){
@@ -149,6 +160,18 @@ function drawBackround(color){
 }
 
 function drawPlayer(player){
+
+    if(player.stunnedEndTime > Date.now()){
+        if(player.player == 1){
+            player.color = "#a6f4d0";
+        } 
+
+        if(player.player == 2){
+            player.color = "#fcc2fa";
+        }
+    }
+
+
     circle(player.x, player.y, player.size, player.color, false);
 
 
@@ -209,7 +232,7 @@ function drawBullets(){
         currentGame.bullets.forEach(function(bullet){
 
             if(!bullet.hit){
-                makeBullet(bullet.x, bullet.y, bullet.x - bullet.deltaX*10, bullet.y - bullet.deltaY*10, "#ED0014", 3) 
+                makeBullet(bullet.x, bullet.y, bullet.x - bullet.deltaX*10, bullet.y - bullet.deltaY*10, bullet.color, 3) 
             }
 
             // circle(bullet.x, bullet.y,2, "white", false) where the bullet currently is
@@ -277,6 +300,10 @@ $("#buy-bullets").on("click", function(){
     socket.emit("buy bullets");
 });
 
+$("#buy-stun").on("click", function(){
+    socket.emit("buy stuns");
+});
+
 
 $("#canvas").on("click", function(e){
     shoot();
@@ -294,6 +321,14 @@ $("body").on("keydown", function(e){
     if(e.which == 68) { keypressDown = true }
     if(e.which == 83) { keypressRight = true }
     if(e.which == 87) { keypressUp = true }
+
+
+
+    // stun 
+
+    if(e.which == 49){          // keypad - 1
+        socket.emit("activate stun")
+    }               
 
 });
 
@@ -332,6 +367,14 @@ socket.on('updated bullet locations', function(updatedBullets){
 socket.on('gameover', function(player){
     gameOver = true;
 });
+
+
+socket.on('successful purchase', function(player){
+    cashRegisterMP3.currentTime = 0;
+    cashRegisterMP3.volume = 0.2;
+    cashRegisterMP3.play();
+});
+
 
 
 
@@ -464,6 +507,6 @@ function checkForObstacleHits(bullet){
     currentGame.obstacles.forEach(function(obstacle){
         if(inRectangle(bullet.x, bullet.y, obstacle)){ hitObstacle = true; }
     });
-    
+
     return hitObstacle;
 }

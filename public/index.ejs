@@ -6,7 +6,7 @@
         <meta name="viewport" content="initial-scale=1, maximum-scale=1">
         <meta name="description" content="This will be a description">
 
-        <link href="https://use.fontawesome.com/releases/v5.0.6/css/all.css" rel="stylesheet">
+        <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.0.10/css/all.css">
 
         <link rel = "stylesheet" type = "text/css" href ="stylesheet.css"/>
         <link rel="shortcut icon" type="image/png" href="assets/icon.png">
@@ -17,16 +17,21 @@
             <canvas id = "canvas" width = "400" height="300"></canvas>
 
             <div class = "panel" id = "resources">
-                <span class = "one-resource"><i class="fas fa-plus"></i> <span id = "health-count">0</span></span>
+                <span class = "one-resource"><i class="fas fa-plus"></i><span id = "health-count">0</span></span>
                 <span class = "one-resource"><i class="fas fa-fire"></i> <span id = "bullet-count">0</span></span>
                 <span class = "one-resource"><i class="fas fa-dollar-sign"></i> <span id = "money-count">0</span></span>
-                <span class = "one-resource"><i class="fas fa-fire"></i> 5</span>
+                <span class = "one-resource"><i class="fas fa-vial"></i> <span id = "stun-count">0</span></span>
             </div>
 
             <div class = "panel" id = "shop">
                 <div class = "one-item">
                     <button id = "buy-bullets"><i class="fas fa-fire"></i> 50</button>
                     <span class = "item-price">$100</span>
+                </div>
+
+                <div class = "one-item">
+                    <button id = "buy-stun"><i class="fas fa-vial"></i> 1</button>
+                    <span class = "item-price">$75</span>
                 </div>
             </div>
 

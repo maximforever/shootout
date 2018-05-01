@@ -156,7 +156,15 @@ MongoClient.connect(dbAddress, function(err, db){
         })
 
         socket.on("buy bullets", function(target){
-            game.buyBullets(thisGame[socket.id]);         // this is messy
+            game.buy(thisGame[socket.id], "bullets", socket);         // this is messy
+        })
+
+        socket.on("buy stuns", function(target){
+            game.buy(thisGame[socket.id], "stuns", socket);         // this is messy
+        })
+
+        socket.on("activate stun", function(target){
+            game.activateStun(thisGame[socket.id]); 
         })
             
 

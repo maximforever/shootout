@@ -12,7 +12,8 @@ var originalGame = {
         hp: 100,
         player: 1,
         bullets: 50,
-        money: 10,
+        money: 1000,
+        stuns: 0,
         collecting: "health",
         moneyRate: 0.1,
         healthRate: 0.1,
@@ -23,7 +24,9 @@ var originalGame = {
             x: 0,
             y: 0,
             hp: 1000
-        }
+        },
+        stunBulletEndTime: 0,
+        stunnedEndTime: 0
     },
     p2: {
         x: 300,
@@ -33,7 +36,8 @@ var originalGame = {
         hp: 100,
         player: 2,
         bullets: 50,
-        money: 10,
+        money: 1000,
+        stuns: 0,
         collecting: "health",
         moneyRate: 0.1,
         healthRate: 0.1,
@@ -44,7 +48,9 @@ var originalGame = {
             x: 360,             // THIS WILL BE DEPENDENT ON CANVAS SIZE
             y: 270,
             hp: 1000              
-        }
+        },
+        stunBulletEndTime: 0,
+        stunnedEndTime: 0
     },
     obstacles: [],
     bullets: []
@@ -54,7 +60,7 @@ var game;
 
 function newGame(){
     game = JSON.parse(JSON.stringify(originalGame));    // make a deep copy
-    generateObstacles(2);
+    generateObstacles(3);
 }
 
 function generateObstacles(count){
@@ -73,7 +79,7 @@ function generateObstacles(count){
         var topObstacles = 0;
         var bottomObstacles = 0;
 
-        while(topObstacles <= count && topTries < 100){  
+        while(topObstacles < count && topTries < 100){  
             var thisObstace = {
                 x: randBetween(0 , 150),            // 50 less than width/height so triangles show up
                 y: randBetween(150, 250),
@@ -90,7 +96,7 @@ function generateObstacles(count){
             }
         }
 
-        while(bottomObstacles <= count && bottomTries < 100){  
+        while(bottomObstacles < count && bottomTries < 100){  
 
             var thisObstace = {
                 x: randBetween(200, 350),            // 50 less than width/height so triangles show up
@@ -107,9 +113,7 @@ function generateObstacles(count){
                 bottomTries++;
             }
         }
-
-
-        
+    
 }
 
 
@@ -131,23 +135,30 @@ function movePlayer(dir, player){
         y: game[player].y
     };
 
+    var moveFactor = 3;             // the larger this is, the less the player moves
+
+    if(game[player].stunnedEndTime > Date.now()){ 
+        moveFactor = 6 
+    }
+
     // figre out where the player will be
     if(dir == 65){
-        newLocation.x -= game[player].size/3;
+        newLocation.x -= game[player].size/moveFactor;
     } else if(dir == 68){
-        newLocation.x += game[player].size/3;
+        newLocation.x += game[player].size/moveFactor;
     } else if(dir == 83){
-        newLocation.y += game[player].size/3;
+        newLocation.y += game[player].size/moveFactor;
     } else if(dir == 87){
-        newLocation.y -= game[player].size/3;
+        newLocation.y -= game[player].size/moveFactor;
     } else {
         console.log("move error");
     }
 
+
     var canGoThere = true;
 
     // only move players if the new location doesn't collide with the other player
-    if(!distanceBetween(newLocation.x, game[otherPlayer].x, newLocation.y, game[otherPlayer].y) > (game.p1.size + game.p2.size )){
+    if(!(distanceBetween(newLocation.x, game[otherPlayer].x, newLocation.y, game[otherPlayer].y) > (game.p1.size + game.p2.size ))){
         canGoThere = false;
         console.log("colliding");
     }
@@ -236,11 +247,18 @@ function createBullet(target, thisPlayer, io){
         y: startingY,
         deltaX: dx,
         deltaY: dy,
+        color: "#ED0014",
         player: thisPlayer,
+        stun: false,
         speed: 3,                       // this should vary with powerups
         damage: 1,                      // this should vary with powerups
         hit: false,
         id: Math.floor(Date.now()*Math.random())
+    }
+
+    if(game[thisPlayer].stunBulletEndTime > Date.now()){
+        bullet.stun = true;
+        bullet.color = "#1AE296";
     }
 
     var bulletMove = setInterval(function(){
@@ -284,6 +302,10 @@ function checkForBulletHits(bullet, io){
         console.log(otherPlayer + " hit!");
         game[otherPlayer].hp -= bullet.damage;
 
+        if(bullet.stun){
+            game[otherPlayer].stunnedEndTime = (Date.now() + 1000 * 10);    // 10 seconds of stun
+        }
+
         if (game[otherPlayer].hp <= 0){
             game.status = "gameover";
             game.winner = bullet.player;
@@ -325,13 +347,33 @@ function checkForObstacleHits(bullet){
 // BUY FUNCTIONS
 
 
-function buyBullets(player){
+function buy(player, item, socket){
+    console.log("buying " + item);
     player = game[player];
         
-    if(player.money >= 100){
+    var thisItem = {};
+
+
+    if(item == "bullets"){
+        thisItem = {
+            cost: 75,
+            amount: 50
+        }
+    } else if(item == "stuns"){
+        thisItem = {
+            cost: 100,
+            amount: 1
+        }
+    }
+
+
+
+    if(player.money >= thisItem.cost){
+
+        socket.emit("successful purchase")
 
         player.money -= 100;
-        player.bullets += 50;
+        player[item] += thisItem.amount;
 
     } else {
         console.log("not enough money");
@@ -340,10 +382,20 @@ function buyBullets(player){
 }
 
 
+// POWERUP FUNCTUINS
+
+
+function activateStun(player){
+
+    if(game[player].stuns > 0){
+        game[player].stuns--;
+        game[player].stunBulletEndTime = (Date.now() + 1000 * 10);         // 10 secs of stun
+    }
+}
 
 
 
-// supporting functions
+// SUPORTING FUNCTIONS
 
 function distanceBetween(x1, x2, y1, y2){
     return Math.sqrt(Math.pow((x1-x2),2) + Math.pow((y1-y2),2));
@@ -394,4 +446,6 @@ module.exports.newGame = newGame;
 module.exports.createBullet = createBullet;
 module.exports.healPlayer = healPlayer;
 module.exports.makeMoney = makeMoney;
-module.exports.buyBullets = buyBullets;
+module.exports.buy = buy;
+
+module.exports.activateStun = activateStun;
