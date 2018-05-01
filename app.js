@@ -182,6 +182,11 @@ MongoClient.connect(dbAddress, function(err, db){
         res.render("index"); 
     })
 
+    app.get("/reset", function(req, res){
+        game.newGame(); 
+        res.redirect("/");
+    })
+
 
 
 
