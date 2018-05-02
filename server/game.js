@@ -12,7 +12,7 @@ var originalGame = {
         hp: 100,
         player: 1,
         bullets: 50,
-        money: 1000,
+        money: 0,
         stuns: 0,
         invisibility: 0,
         collecting: "health",
@@ -24,7 +24,7 @@ var originalGame = {
             height: 30,
             x: 0,
             y: 0,
-            hp: 1000
+            hp: 100
         },
         stunBulletEndTime: 0,
         stunnedEndTime: 0,
@@ -38,7 +38,7 @@ var originalGame = {
         hp: 100,
         player: 2,
         bullets: 50,
-        money: 1000,
+        money: 0,
         stuns: 0,
         invisibility: 0,
         collecting: "health",
@@ -50,7 +50,7 @@ var originalGame = {
             height: 30,
             x: 360,             // THIS WILL BE DEPENDENT ON CANVAS SIZE
             y: 270,
-            hp: 1000              
+            hp: 100              
         },
         stunBulletEndTime: 0,
         stunnedEndTime: 0,
