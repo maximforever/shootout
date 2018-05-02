@@ -293,7 +293,7 @@ function drawBullets(){
 function shoot(){
 
 
-    if(currentGame.status != "gameover" && currentGame[thisPlayer].bullets > 0){
+    if(currentGame.status != "gameover" && currentGame[thisPlayer] && currentGame[thisPlayer].bullets > 0){
 
         zapMP3.currentTime = 0;
         zapMP3.play();
