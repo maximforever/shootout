@@ -24,7 +24,7 @@ var originalGame = {
             height: 30,
             x: 0,
             y: 0,
-            hp: 100
+            hp: 1000
         },
         stunBulletEndTime: 0,
         stunnedEndTime: 0,
@@ -50,7 +50,7 @@ var originalGame = {
             height: 30,
             x: 360,             // THIS WILL BE DEPENDENT ON CANVAS SIZE
             y: 270,
-            hp: 100              
+            hp: 1000              
         },
         stunBulletEndTime: 0,
         stunnedEndTime: 0,
