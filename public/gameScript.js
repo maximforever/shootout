@@ -19,6 +19,9 @@ var keypressDown = false;
 var keypressRight = false;
 var keypressUp = false
 
+var scaleMultiplier = 1;
+
+
 var currentGame = {
     background: "white"
 }
@@ -36,10 +39,18 @@ mountains.src = "assets/patterns/mountains2.png";
 
 
 
+var p1image = new Image();
+p1image.src = "assets/icons/bluePlayer.png";
+
+var p2image = new Image();
+p2image.src = "assets/icons/redPlayer.png";
+
+
 
 /* audio */
 
 var zapMP3 = new Audio('assets/zap.mp3');
+var stunMP3 = new Audio('assets/stun.mp3');
 var hitMP3 = new Audio('assets/hit.mp3');
 var thumpMP3 = new Audio('assets/thump.mp3');
 
@@ -73,8 +84,19 @@ function main(){
 
 function gameInit(){
     console.log("initiating");
+    
+    scaleMultiplier = window.innerHeight / HEIGHT * 0.75;
+
+
+    WIDTH = canvas.width *= scaleMultiplier;
+    HEIGHT = canvas.height *= scaleMultiplier;
+
+    $(".panel").width(WIDTH);
+
     socket.emit("update game");
     gameLoop();
+
+
 }
 
 // main game loop
@@ -87,7 +109,7 @@ function gameLoop(){
         drawBoard(currentGame);
     } else {
         drawBoard(currentGame);
-        text(currentGame.winner + " has won.", WIDTH/2, HEIGHT/2, 30, "white", true);
+        text(currentGame.winner + " has won.", WIDTH/2, HEIGHT/2, 30*scaleMultiplier, "white", true);
 
     }
     
@@ -110,6 +132,10 @@ function drawBoard(game){
     drawBackround(game.background);
     sendMovement();
 
+
+    drawShotLine();
+    
+    
     if(game.p1){ 
         drawBase("p1")
         drawPlayer(game.p1) 
@@ -121,8 +147,6 @@ function drawBoard(game){
     }
 
     drawObstacles();
-
-    drawShotLine();
     drawBullets();
 
 
@@ -150,8 +174,8 @@ function drawBoard(game){
         $("#health-count").text(Math.floor(player.hp));
     }
 
-    if(player && typeof(player.stuns) != "undefined"){
-        $("#stun-count").text(Math.floor(player.stuns));
+    if(player && typeof(player.stun) != "undefined"){
+        $("#stun-count").text(Math.floor(player.stun));
     }
 
     if(player && typeof(player.invisibility) != "undefined"){
@@ -174,7 +198,56 @@ function drawBackround(color){
 }
 
 function drawPlayer(player){
+    //console.log(player.player);
 
+
+    var image = (player.player == 1) ? p1image : p2image;
+
+    ctx.save();
+    //ctx.rotate(Math.atan2(lastX, lastY) * 180 / Math.PI);
+    //ctx.translate(player.x, player.y);
+    //ctx.rotate(180*180/ Math.PI);
+
+    
+    player.color = "rgba(255, 255, 255, 0)";
+
+    // health bar
+    var healthBarWidth = player.size*2 + 10;                // those extra 10 px make the players look a little nicer              
+    var healthWidth = player.hp/100*healthBarWidth;
+
+    //check that the player is invisible...
+
+    if(player.invisibilityEndTime > Date.now()){
+
+        if(player.player == thisPlayer){       
+
+            // draw an empty circle            
+            circle(player.x, player.y, player.size, player.color, true);
+
+            // draw health bars
+            rect(player.x - player.size - 5, player.y - player.size*2, healthBarWidth, healthBarWidth/6, "red", true);
+            rect(player.x - player.size - 5, player.y - player.size*2, healthWidth, healthBarWidth/6, "green", false);
+
+        } else {
+            // draw nothing
+            text("Someone is invisible", WIDTH/2, HEIGHT/2, 10*scaleMultiplier, "white", true);
+
+        }
+    } else {
+            // 1.5*player.size ensures the image is ligned up correctly within a circle
+                                        
+        ctx.drawImage(image, player.x - 1.5*player.size, player.y- player.size*2, player.size*3, player.size*3);
+        player.color = "rgba(255, 255, 255, 0)";
+        circle(player.x, player.y, player.size, player.color, true);
+        rect(player.x - player.size - 5, player.y - player.size*2, healthBarWidth, healthBarWidth/6, "red", true);
+        rect(player.x - player.size - 5, player.y - player.size*2, healthWidth, healthBarWidth/6, "green", false);
+    }
+
+    
+    ctx.restore();
+
+
+    /*
     if(player.stunnedEndTime > Date.now()){
         if(player.player == 1){
             player.color = "#a6f4d0";
@@ -202,35 +275,23 @@ function drawPlayer(player){
         var healthBarWidth = player.size*2 + 10;                // those extra 10 px make the players look a little nicer              
         var healthWidth = player.hp/100*healthBarWidth;
 
-        rect(player.x - player.size - 5, player.y - player.size*2, healthBarWidth, 5, "red", true);
+        rect(player.x - player.size - 5, player.y - player.size*2, healthBarWidth, healthBarWidth/6, "red", true);
         
         if(player.hp >= 0){
-            rect(player.x - player.size - 5, player.y - player.size*2, healthWidth, 5, "green", false);
+            rect(player.x - player.size - 5, player.y - player.size*2, healthWidth, healthBarWidth/6, "green", false);
         }
     }
 
     
-    
+    */
     
 }
 
 function drawBase(player){
     var base = currentGame[player].base;
-    rect(base.x, base.y, base.width , base.height, base.color);
+    rect(base.x, base.y, base.width, base.height, base.color);
 
     var startingY = (player == "p2") ? (currentGame[player].base.y - 5) : (currentGame[player].base.y + base.height);
-
-    var healthBarWidth = base.width;                // those extra 10 px make the players look a little nicer              
-    var healthWidth = base.hp/1000*healthBarWidth;
-
-    rect(base.x, startingY, healthBarWidth, 5, "red", true);
-    
-    if(base.hp >= 0){
-        rect(base.x, startingY, healthWidth, 5, "green", false);
-    }
-
-
-
     drawBaseType(player);
 }
 
@@ -251,7 +312,8 @@ function drawObstacles(){
 
 function drawShotLine(){
     if(thisPlayer){
-        //line(currentGame[thisPlayer].x, currentGame[thisPlayer].y, lastX, lastY, 1)
+        circle(lastX, lastY, 5, "pink", true );
+        line(currentGame[thisPlayer].x, currentGame[thisPlayer].y, lastX, lastY, 1)
     } 
 }
 
@@ -298,9 +360,10 @@ function shoot(){
         zapMP3.currentTime = 0;
         zapMP3.play();
 
-        var shot = {
-            x: lastX, 
-            y: lastY
+        var shot = {    
+            // we have to "un"-account for screen size 
+            x: lastX/scaleMultiplier, 
+            y: lastY/scaleMultiplier
         }
 
         socket.emit("shoot", shot);
@@ -322,6 +385,7 @@ $("#canvas").on("mousemove", function(e){
 
     lastX = e.pageX - $("#canvas").offset().left;
     lastY = e.pageY - $("#canvas").offset().top;
+
 });
 
 
@@ -330,7 +394,7 @@ $("#buy-bullets").on("click", function(){
 });
 
 $("#buy-stuns").on("click", function(){
-    socket.emit("buy stuns");
+    socket.emit("buy stun");
 });
 
 $("#buy-invisibility").on("click", function(){
@@ -353,7 +417,17 @@ $("body").on("keydown", function(e){
     if(e.which == 65) { keypressLeft = true }
     if(e.which == 68) { keypressDown = true }
     if(e.which == 83) { keypressRight = true }
-    if(e.which == 87) { keypressUp = true }          
+    if(e.which == 87) { keypressUp = true }         
+
+
+    if(e.which == 93) {
+        socket.emit("activate stun");
+    } 
+
+    if(e.which == 94) {
+       socket.emit("activate invisibility");
+    }
+
 
 });
 
@@ -365,6 +439,7 @@ $("body").on("click", "#activate-stun", function(){
 $("body").on("click", "#activate-invisibility", function(){
     socket.emit("activate invisibility");
 });
+
 
 $("body").on("keyup", function(e){
 
@@ -387,9 +462,31 @@ $("body").on("keyup", function(e){
 // SOCKET CODE
 
 // when we get an updated game, set current game to updated game.
-socket.on('updated game', function(newData){
-    currentGame = newData.game;
+socket.on('updated game', function(newData, sound){
+    currentGame = scaleGame(newData.game)
     thisPlayer = newData.player;
+
+    if(sound != null){
+
+        switch(sound) {
+            case "purchase":
+                playPurchaseSound();
+                break;
+            case "useInvisibility":
+                playInvisibilitySound();
+                break;
+            case "applyStun":
+                playApplyStunSound();
+                break;
+            case "useStun":
+                playUseStunSound();
+                break;
+            default:
+                break;
+        }
+
+
+    }
 });
 
 
@@ -403,21 +500,27 @@ socket.on('gameover', function(player){
 });
 
 
-socket.on('successful purchase', function(player){
+function playPurchaseSound(){
     cashRegisterMP3.currentTime = 0;
     cashRegisterMP3.volume = 0.2;
     cashRegisterMP3.play();
-});
+}
 
-
-socket.on('successful invisibility', function(player){
+function playInvisibilitySound(){
     whooshMP3.currentTime = 0;
     whooshMP3.volume = 0.2;
     whooshMP3.play();
-});
+};
 
+function playApplyStunSound(){
+    stunMP3.currentTime = 0;
+    stunMP3.volume = 0.2;
+    stunMP3.play();
+};
 
-
+function playUseStunSound(){
+    console.log("there'll be a sound here");
+};
 
 
 // LIBRARY CODE
@@ -430,7 +533,7 @@ function circle(x,y,r, color, stroke) {
 
     ctx.beginPath();
     ctx.arc(x, y, r, 0, Math.PI*2, false);               // start at 0, end at Math.PI*2
-    
+
     ctx.shadowBlur = 30;
     ctx.shadowColor = color;
     ctx.closePath();
@@ -463,7 +566,8 @@ function rect(x,y,w,h, color) {
 }
 
 function text(text, x, y, size, color, centerAlign){
-    ctx.font =  size + "px";
+
+    ctx.font =  size + "px Arial";
     ctx.fillStyle = color;
 
     if(centerAlign){
@@ -474,6 +578,7 @@ function text(text, x, y, size, color, centerAlign){
 
     ctx.fillText(text, x, y);
 }
+
 
 function line(x1, y1, x2, y2, color, width){
     ctx.beginPath();
@@ -516,7 +621,7 @@ function drawBaseType(player){
         console.log(currentGame[player].collecting);
     }
 
-    ctx.drawImage(image, (currentGame[player].base.x + currentGame[player].base.width/2) - 20/2, (currentGame[player].base.y + currentGame[player].base.height/2) - 20/2, 20, 20);
+    ctx.drawImage(image, (currentGame[player].base.x + currentGame[player].base.width/2) - 20/2, (currentGame[player].base.y + currentGame[player].base.height/2) - 20/2, 20*scaleMultiplier, 20*scaleMultiplier);
 
 }
 
@@ -551,4 +656,41 @@ function checkForObstacleHits(bullet){
     });
 
     return hitObstacle;
+}
+
+
+function scaleGame(game){
+    
+    game.p1.x *= scaleMultiplier;
+    game.p1.y *= scaleMultiplier;
+    game.p1.size *= scaleMultiplier;
+    game.p1.base.x *= scaleMultiplier;
+    game.p1.base.y *= scaleMultiplier;
+    game.p1.base.width *= scaleMultiplier;
+    game.p1.base.height *= scaleMultiplier;
+
+    game.p2.x *= scaleMultiplier;
+    game.p2.y *= scaleMultiplier;
+    game.p2.size *= scaleMultiplier;
+    game.p2.base.x *= scaleMultiplier;
+    game.p2.base.y *= scaleMultiplier;
+    game.p2.base.width *= scaleMultiplier;
+    game.p2.base.height *= scaleMultiplier;
+
+
+    game.obstacles.forEach(function(obstacle){
+        obstacle.x *= scaleMultiplier;
+        obstacle.y *= scaleMultiplier;
+        obstacle.width *= scaleMultiplier;
+        obstacle.height *= scaleMultiplier;
+    });
+
+    game.bullets.forEach(function(bullet){
+        bullet.x *= scaleMultiplier;
+        bullet.y *= scaleMultiplier;
+    });
+
+    return game;
+
+
 }

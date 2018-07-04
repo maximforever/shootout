@@ -1,9 +1,17 @@
+// game operations go here
+
 var originalGame = {
     status: "in progress",
     background: "#00447C",
     winner: "",
-    width: 0,
-    height: 0, 
+    participants: {
+        p1: null,
+        p2: null,
+        spectators: []
+    },
+    spectators: {
+        queuedUpSounds: []
+    },
     p1: {
         x: 80,
         y: 60,
@@ -12,8 +20,8 @@ var originalGame = {
         hp: 100,
         player: 1,
         bullets: 50,
-        money: 0,
-        stuns: 0,
+        money: 1000,
+        stun: 0,
         invisibility: 0,
         collecting: "health",
         moneyRate: 0.1,
@@ -23,12 +31,12 @@ var originalGame = {
             width: 40,
             height: 30,
             x: 0,
-            y: 0,
-            hp: 1000
+            y: 0
         },
         stunBulletEndTime: 0,
         stunnedEndTime: 0,
-        invisibilityEndTime: 0
+        invisibilityEndTime: 0,
+        queuedUpSounds: []
     },
     p2: {
         x: 300,
@@ -38,8 +46,8 @@ var originalGame = {
         hp: 100,
         player: 2,
         bullets: 50,
-        money: 0,
-        stuns: 0,
+        money: 1000,
+        stun: 0,
         invisibility: 0,
         collecting: "health",
         moneyRate: 0.1,
@@ -48,13 +56,13 @@ var originalGame = {
             color: "#C900C2",
             width: 40,
             height: 30,
-            x: 360,             // THIS WILL BE DEPENDENT ON CANVAS SIZE
-            y: 270,
-            hp: 1000              
+            x: 360,             
+            y: 270          
         },
         stunBulletEndTime: 0,
         stunnedEndTime: 0,
-        invisibilityEndTime: 0
+        invisibilityEndTime: 0,
+        queuedUpSounds: []
     },
     obstacles: [],
     bullets: []
@@ -62,12 +70,30 @@ var originalGame = {
 
 var game;
 
-function newGame(){
-    game = JSON.parse(JSON.stringify(originalGame));    // make a deep copy
-    generateObstacles(3);
+var itemStore = {
+    invisibility: {
+        cost: 200,
+        amount: 1,
+        useSound: "useInvisibility",
+    },
+    stun: {
+        cost: 100,
+        amount: 1,
+        useSound: "useStun",
+    },
+    bullets: {
+        cost: 75,
+        amount: 50,
+        useSound: "useBullet",
+    },
 }
 
-function generateObstacles(count){
+function resetGame(){
+    game = JSON.parse(JSON.stringify(originalGame));    // make a deep copy
+    game = generateObstacles(game, 3);
+}
+
+function generateObstacles(thisGame, count){
 
         /*
             1. pick a random coordinate within our bounds
@@ -93,7 +119,7 @@ function generateObstacles(count){
 
             if(!rectanglesCollide(thisObstace)){
                 console.log("generated top obstacle #" + topObstacles + " on try " + topTries);
-                game.obstacles.push(thisObstace);
+                thisGame.obstacles.push(thisObstace);
                 topObstacles++;
             } else {
                 topTries++;
@@ -111,12 +137,15 @@ function generateObstacles(count){
 
             if(!rectanglesCollide(thisObstace)){
                 console.log("generated bottom obstacle #" + bottomObstacles + " on try " + bottomTries);
-                game.obstacles.push(thisObstace);
+                thisGame.obstacles.push(thisObstace);
                 bottomObstacles++;
             } else {
                 bottomTries++;
             }
         }
+
+
+        return thisGame;
     
 }
 
@@ -256,7 +285,7 @@ function createBullet(target, thisPlayer, io){
         stun: false,
         speed: 3,                       // this should vary with powerups
         damage: 5,                      // this should vary with powerups
-        hit: false,
+        expired: false,
         id: Math.floor(Date.now()*Math.random())
     }
 
@@ -265,34 +294,51 @@ function createBullet(target, thisPlayer, io){
         bullet.color = "#1AE296";
     }
 
-    var bulletMove = setInterval(function(){
+    game.bullets.push(bullet);
 
-        checkForBulletHits(bullet, io);
-        checkForBaseHits(bullet);
-        checkForObstacleHits(bullet);
+}
 
-        if(bullet.x < 400 && bullet.x > 0 && bullet.y < 300 && bullet.y > 0 && !bullet.hit){
-            bullet.x += bullet.deltaX*bullet.speed;
-            bullet.y += bullet.deltaY*bullet.speed;
+function moveBullets(io){
 
-        } else {
-            // stop tracking the bullet's movement
-            clearInterval(bulletMove);
+    for(var i = 0; i < game.bullets.length; i++){
 
-            // delete the bullet from the bullets array
+        var bullet = game.bullets[i];
 
-            for(var i = 0; i < game.bullets.length; i++){
-                if(game.bullets[i].id == bullet.id){
-                    game.bullets.splice(i, 1);
+        if(!bullet.expired){
+
+
+
+            checkForBulletHits(bullet, io);
+            checkForObstacleHits(bullet);
+
+            if(bullet.x < 400 && bullet.x > 0 && bullet.y < 300 && bullet.y > 0 && !bullet.expired){
+                bullet.x += bullet.deltaX*bullet.speed;
+                bullet.y += bullet.deltaY*bullet.speed;
+
+            } else {
+                // stop tracking the bullet's movement
+                bullet.expired = true;
+
+                // delete the bullet from the bullets array - cycle again in case multiple bullets hit at the same time?
+                // cycling again really shouldn't be necessary
+
+                // (version 1)
+
+                for(var i = 0; i < game.bullets.length; i++){
+                    if(game.bullets[i].id == bullet.id){
+                        game.bullets.splice(i, 1);
+                    }
                 }
+
+                // (version 2)
+
+                // game.bullets.splice(i, 1);
+
+
             }
         }
 
-    }, 20)
-
-
-    game.bullets.push(bullet);
-
+    }
 }
 
 function checkForBulletHits(bullet, io){
@@ -301,51 +347,38 @@ function checkForBulletHits(bullet, io){
 
     if(distanceBetween(bullet.x, game[otherPlayer].x, bullet.y, game[otherPlayer].y) < game[otherPlayer].size){
 
-        bullet.hit = true;
+        bullet.expired = true;
 
         console.log(otherPlayer + " hit!");
         game[otherPlayer].hp -= bullet.damage;
 
         if(bullet.stun){
+            game[bullet.player].queuedUpSounds.push("applyStun");
             game[otherPlayer].stunnedEndTime = (Date.now() + 1000 * 10);    // 10 seconds of stun
-        }
-
-        if (game[otherPlayer].hp <= 0){
-            game.status = "gameover";
-            game.winner = bullet.player;
-            io.emit("gameover", bullet.player)
+            game.spectators.queuedUpSounds.push("applyStun");
         }
 
     }
-}
-
-function checkForBaseHits(bullet){
-
-    var player = bullet.player;
-    var otherPlayer = (bullet.player == "p2") ? "p1" : "p2";
-
-    // no need to check whose bullet hits the base, because it's only checking the base of the player that fired the bullet
-
-    // if a bullet hits the base...
-    if(inRectangle(bullet.x, bullet.y, game[bullet.player].base)){
-
-        bullet.hit = true;
-
-        var newMode = (game[player].collecting == "health") ? "money" : "health";
-        game[player].collecting = newMode;
-
-        console.log("Now collecting " + newMode);
-    } else if(inRectangle(bullet.x, bullet.y, game[otherPlayer].base)){
-        game[otherPlayer].base.hp -= bullet.damage;
-        bullet.hit = true;
-    }
-
 }
 
 function checkForObstacleHits(bullet){
+
     game.obstacles.forEach(function(obstacle){
-        if(inRectangle(bullet.x, bullet.y, obstacle)){ bullet.hit = true; }
+        if(inRectangle(bullet.x, bullet.y, obstacle)){ bullet.expired = true; }
     });
+
+    if(bullet.player == "p1" && inRectangle(bullet.x, bullet.y, game.p1.base)){
+        console.log(game.p1.collecting);
+        game.p1.collecting = (game.p1.collecting == "money") ? "health" : "money";
+        bullet.expired = true;
+    }
+
+    if(bullet.player == "p2" && inRectangle(bullet.x, bullet.y, game.p2.base)){
+        console.log(game.p2.collecting);
+        game.p2.collecting = (game.p2.collecting == "money") ? "health" : "money";
+        bullet.expired = true;
+    }
+
 }
 
 // BUY FUNCTIONS
@@ -354,40 +387,20 @@ function checkForObstacleHits(bullet){
 function buy(player, item, socket){
     console.log("buying " + item);
     player = game[player];
-        
-    var thisItem = {};
+    var thisItem = itemStore[item];            // itemStore holds objects that describe the items & prices
 
-
-    if(item == "bullets"){
-        thisItem = {
-            cost: 75,
-            amount: 50
-        }
-    } else if(item == "stuns"){
-
-        thisItem = {
-            cost: 100,
-            amount: 1
-        }
-        
-    } else if(item == "invisibility"){
-
-        thisItem = {
-            cost: 200,
-            amount: 1
-        }
-    
-
-    }
-
-
+    console.log(thisItem);
 
     if(player.money >= thisItem.cost){
 
-        socket.emit("successful purchase")
-
         player.money -= thisItem.cost;
         player[item] += thisItem.amount;
+
+        console.log(player);
+
+        player.queuedUpSounds.push("purchase");
+        game.spectators.queuedUpSounds.push("purchase");
+
 
     } else {
         console.log("not enough money");
@@ -401,9 +414,11 @@ function buy(player, item, socket){
 
 function activateStun(player){
 
-    if(game[player].stuns > 0 && game[player].stunBulletEndTime <= Date.now()){           // if player not currently stunning
-        game[player].stuns--;
+    if(game[player].stun > 0 && game[player].stunBulletEndTime <= Date.now()){           // if player not currently stunning
+        game[player].stun--;
         game[player].stunBulletEndTime = (Date.now() + 1000 * 10);         // 10 secs of stun
+        game[player].queuedUpSounds.push("useStun")
+        game.spectators.queuedUpSounds.push("useStun");
     }
 }
 
@@ -416,7 +431,8 @@ function activateInvisibility(player, io){
         game[player].invisibility--;
         game[player].invisibilityEndTime = (Date.now() + 1000 * 10);         // 10 secs of invisibility
     
-        io.emit("successful invisibility");
+        game[player].queuedUpSounds.push("useInvisibility")
+        game.spectators.queuedUpSounds.push("useInvisibility");
     }
 }
 
@@ -469,11 +485,14 @@ function randBetween(min, max){
 
 module.exports.getGame = getGame;
 module.exports.movePlayer = movePlayer;
-module.exports.newGame = newGame;
+module.exports.resetGame = resetGame;
 module.exports.createBullet = createBullet;
+module.exports.moveBullets = moveBullets;
 module.exports.healPlayer = healPlayer;
 module.exports.makeMoney = makeMoney;
 module.exports.buy = buy;
+
+module.exports.generateObstacles = generateObstacles;
 
 module.exports.activateStun = activateStun;
 module.exports.activateInvisibility = activateInvisibility;

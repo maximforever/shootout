@@ -8,65 +8,51 @@
 
         <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.0.10/css/all.css">
 
-        <link rel = "stylesheet" type = "text/css" href ="stylesheet.css"/>
+        <link rel = "stylesheet" type = "text/css" href ="./stylesheet.css"/>
         <link rel="shortcut icon" type="image/png" href="assets/icon.png">
+
+        <!-- FONT -->
+        <link href="https://fonts.googleapis.com/css?family=Open+Sans:300,600" rel="stylesheet">
+        <link href="https://fonts.googleapis.com/css?family=Podkova:700" rel="stylesheet">
+
     </HEAD>
 
-    <BODY>
-            
-            <canvas id = "canvas" width = "400" height="300"></canvas>
+    <BODY id = "homepage">
 
-            <div class = "panel" id = "resources">
-                <div class = "panel-title">Resources</div>
+        <h1>Shootout!</h1>
 
-                <div class = "panel-container">
-                    <span class = "one-resource"><i class="fas fa-plus"></i> <span id = "health-count">0</span></span>
-                    <span class = "one-resource"><i class="fas fa-fire"></i> <span id = "bullet-count">0</span></span>
-                    <span class = "one-resource"><i class="fas fa-dollar-sign"></i> <span id = "money-count">0</span></span>
-                    
 
-                    <span class = "one-resource">
-                        <button class = "use-button" id = "activate-stun"><i class="fas fa-vial"></i>  <span id = "stun-count">0</span></button>
-                    </span>
-                    
+        <button class = "game-button" id = "new-game" onclick="location.href='/new-game'">New Game</button>
 
-                    <span class = "one-resource">
-                        <button class = "use-button" id = "activate-invisibility"><i class="far fa-eye-slash"></i> <span id = "invisibility-count">0</span></button>
-                    </span>
-                </div>
-            </div>
+        <hr>
 
-            <div class = "panel" id = "shop">
-                <div class = "panel-title">Buy</div>
 
-                <div class = "panel-container">
-                    <div class = "one-item">
-                        <button class = "buy-button" id = "buy-bullets"><i class="fas fa-fire"></i> 50</button>
-                        <span class = "item-price">$75</span>
-                    </div>
+        <% for(var i = 0; i < games.length; i++) { %>
 
-                    <div class = "one-item">
-                        <button class = "buy-button" id = "buy-stuns"><i class="fas fa-vial"></i> 1</button>
-                        <span class = "item-price">$100</span>
-                    </div>
+            <% var game = games[i] %>
 
-                    <div class = "one-item">
-                        <button class = "buy-button" id = "buy-invisibility"><i class="far fa-eye-slash"></i> 1</button>
-                        <span class = "item-price">$200</span>
+
+            <button class = "game-button" id = " <%= game.id %> " onclick="location.href='/game/' + <%= game.id %>">
+                <div class = "game-button-container">
+                    <div class = "game-info-name"><%= game.id %></div>
+                    <div class = "game-info-players">
+                        <span class = "p1"></span>
+                        <span class = "p2"></span>
                     </div>
                 </div>
-            </div>
+            </button>
+            <br>    
 
-            
+        <% } %>
 
-            <div id = "other-buttons">
-                <button id = "update">Get Updated Game</button>
-                <button id = "reset">Reset Game</button>
-            </div>
 
-<!--         <script src="/socket.io/socket.io.js"></script> -->
+
+
+
+
+
         <script src="https://cdn.socket.io/socket.io-1.4.0.js"></script>
         <script src="https://code.jquery.com/jquery-2.2.4.min.js" integrity="sha256-BbhdlvQf/xTY9gja0Dq3HiwQF8LaCRTXxZKRutelT44=" crossorigin="anonymous"></script>
-        <script type="text/javascript" src = "script.js"></script>
+        <script type="text/javascript" src = "./setup.js"></script>
     </BODY>
 </HTML>

@@ -1,114 +1,112 @@
-/* CRUD */
+// database operations go here
+const game = require("../server/game");
+const database = require("../server/database");
 
-function create(db, col, obj, callback){
-    console.log("DB: creating");
-    db.collection(col).save(obj, function(err, result){
-        if (err){
-            console.log("MAYDAY! MAYDAY! Crashing.");
-            console.log(err);
-        }
-        console.log("Successfully saved this object to '" + col + "' :");
-        //console.log(obj);
-        callback(result);
+var gameTemplate = {
+    id: 0,
+    status: "in progress",
+    background: "#00447C",
+    winner: "",
+    participants: {
+        p1: null,
+        p2: null,
+        spectators: []
+    },
+    spectators: {
+        queuedUpSounds: []
+    },
+    p1: {
+        x: 80,
+        y: 60,
+        color: "#96A9D9",
+        size: 10,
+        hp: 100,
+        player: 1,
+        bullets: 50,
+        money: 1000,
+        stun: 0,
+        invisibility: 0,
+        collecting: "health",
+        moneyRate: 0.1,
+        healthRate: 0.1,
+        base: {
+            color: "#6B769E",
+            width: 40,
+            height: 30,
+            x: 0,
+            y: 0
+        },
+        stunBulletEndTime: 0,
+        stunnedEndTime: 0,
+        invisibilityEndTime: 0,
+        queuedUpSounds: []
+    },
+    p2: {
+        x: 300,
+        y: 250,
+        color: "#F26DF9", 
+        size: 10, 
+        hp: 100,
+        player: 2,
+        bullets: 50,
+        money: 1000,
+        stun: 0,
+        invisibility: 0,
+        collecting: "health",
+        moneyRate: 0.1,
+        healthRate: 0.1,
+        base: {
+            color: "#C900C2",
+            width: 40,
+            height: 30,
+            x: 360,             
+            y: 270          
+        },
+        stunBulletEndTime: 0,
+        stunnedEndTime: 0,
+        invisibilityEndTime: 0,
+        queuedUpSounds: []
+    },
+    obstacles: [],
+    bullets: []
+}
+
+
+
+
+
+function getAllGames(db, callback){
+
+    // get all games from DB here
+
+    var gameQuery = {
+        status: "in progress"
+    }
+
+    database.read(db, "games", gameQuery, function getOngoingGames(games){
+        console.log("fetched " +  games.length + " games");
+        callback(games);
+    })
+
+    //callback({})
+    
+}
+
+function createNewGame(db, callback){
+
+    var newGame = JSON.parse(JSON.stringify(gameTemplate));
+    newGame.id = Date.now()
+    newGame = game.generateObstacles(newGame, 3);
+
+    console.log("game with obstacles");
+    console.log(newGame);
+    
+
+    database.create(db, "games", newGame, function createGame(game){
+        callback(game.id)
     })
 }
 
-function read(db, col, obj, callback){                                
-    console.log("DB: reading");
-    db.collection(col).find(obj).toArray(function(err, result){
-        if (err){
-            console.log("MAYDAY! MAYDAY! Crashing.");
-            console.log(err);
-        }
-        console.log("FIND: pulled " + result.length + " records from '" + col + "' for the query:");
-        console.log(obj);
-        callback(result);
-    })
-}
 
-function update(db, col, item, query, callback){
-    console.log("DB: updating");
-    console.log("item is: ");
-    console.log(item);
-    console.log("query is: ");
-    console.log(query);
-
-    db.collection(col).update(item, query, {upsert: true},  function displayAfterUpdating(){
-        console.log("Updated successfully! Fetching object: ");
-        read(db, col, item, function showUpdated(updatedItem){           // do we need to find the item again?
-            console.log("HERE IT IS:");
-            console.log(updatedItem[0]);
-            callback(updatedItem[0]);
-        });
-    });
-}
-
-
-function remove(db, col, query, callback){
-    console.log("DB: deleting");
-    db.collection(col).remove(query, function removeThis(err, result) {
-        if (err){
-            console.log("MAYDAY! MAYDAY! Crashing.");
-            console.log(err);
-        }
-        callback("Database: Record successfully deleted");
-    });
-};
-
-
-/* non-CRUD function */
-
-function count(db, col, obj, callback){                                
-    console.log("DB: counting");
-    db.collection(col).count(function(err, count){
-        if (err){
-            console.log("MAYDAY! MAYDAY! Crashing.");
-            console.log(err);
-        }
-        console.log("COUNT: counted " + count + " records from '" + col + "' for the query:");
-        console.log(obj);
-        callback(count);
-    })
-}
-
-function sortRead(db, col, obj, sort, callback){                                
-    console.log("DB: reading WITH SORT");
-    db.collection(col).find(obj).sort(sort).toArray(function(err, result){
-        if (err){
-            console.log("MAYDAY! MAYDAY! Crashing.");
-            console.log(err);
-        }
-        console.log("READ AND SORT: pulled " + result.length + " records from '" + col + "' for the query WITH SORT:");
-        console.log(sort);
-        callback(result);
-    })
-}
-
-function updateMany(db, col, item, query, callback){
-    console.log("DB: updating");
-    console.log("item is: ");
-    console.log(item);
-    console.log("query is: ");
-    console.log(query);
-
-    db.collection(col).update(item, query, {upsert: true, multi: true},  function displayAfterUpdating(){
-        console.log("Updated successfully! Fetching object: ");
-        read(db, col, item, function showUpdated(updatedItem){           // do we need to find the item again?
-            console.log("HERE IT IS:");
-            console.log(updatedItem[0]);
-            callback(updatedItem[0]);
-        });
-    });
-}
-
-/* MODULE EXPORTS */
-
-module.exports.create = create;
-module.exports.read = read;
-module.exports.update = update;
-module.exports.remove = remove;
-
-module.exports.count = count;
-module.exports.sortRead = sortRead;
-module.exports.updateMany = updateMany;
-
+module.exports.getAllGames = getAllGames;
+module.exports.createNewGame = createNewGame;
