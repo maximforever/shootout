@@ -32,6 +32,8 @@ var offset = {
     y: 0
 }
 
+var offsetOn = false;
+
 
 // load up images for canvas 
 var healthImage = new Image();
@@ -408,8 +410,8 @@ function shoot(){
 
         var shot = {    
             // we have to "un"-account for screen size 
-            x: lastX/scaleMultiplier, 
-            y: lastY/scaleMultiplier
+            x: (lastX - offset.x)/scaleMultiplier, 
+            y: (lastY - offset.y)/scaleMultiplier
         }
 
         socket.emit("shoot", shot);
@@ -426,6 +428,15 @@ $("body").on("click", "#update", function(){
 
 $("body").on("click", "#reset", function(){
     socket.emit("reset game");
+});
+
+
+$("body").on("click", "#offset", function(){
+    offsetOn = (offsetOn) ? false : true;
+
+    if(!offsetOn){
+        offset.x = offset.y = 0;
+    }
 });
 
 
@@ -518,7 +529,6 @@ socket.on('updated game', function(newData, sound){
 
     // TURN OFFSET ON
 
-    var offsetOn = false;
 
     if(offsetOn && typeof(currentGame[newData.player]) != "undefined" ){
         offset.x = WIDTH/2 - currentGame[newData.player].x;
