@@ -89,11 +89,6 @@ MongoClient.connect(dbAddress, function(err, client){
             res.render("index", { games: currentGames }); 
         });
 
-        app.get("/reset", function(req, res){
-            gameops.resetGame(); 
-            res.redirect("/");
-        })
-
         app.get("/clear", function(req, res){
             currentGames = {};
             res.redirect("/");
@@ -178,16 +173,6 @@ MongoClient.connect(dbAddress, function(err, client){
                 thisPlayer = thisGame.incomingPlayer;
                 thisGame.incomingPlayer = null;          // reset incoming player for the next player
 
-
-
-                // if both players connected, start the game
-                if(thisGame.status == "setup" && thisGame.participants.p1 != null && thisGame.participants.p2 != null){
-                    console.log("starting the game!");
-                    thisGame.status = "in progress";
-                } else {
-                    console.log("still setting up");
-                }
-
                 // send first update
                 var newData = {
                     game: thisGame,
@@ -270,13 +255,6 @@ MongoClient.connect(dbAddress, function(err, client){
                     clearInterval(thisConnection);
                 });
 
-                socket.on("reset game", function(){
-                    if(thisGame.status == "in progress"){
-                        console.log("resetting game");
-                        gameops.newGame();
-                    }
-                });
-
                 socket.on("move player", function(dir){
                     if(thisGame.status == "in progress"){
                         gameops.movePlayer(thisGame, dir, thisPlayer);
@@ -317,6 +295,19 @@ MongoClient.connect(dbAddress, function(err, client){
                     if(thisGame.status == "in progress"){
                         gameops.activateInvisibility(thisGame, thisPlayer, io); 
                     }
+                });
+
+                socket.on("ready up", function(){
+
+                    thisGame[thisPlayer].ready = true;
+
+                    // if both players are in and ready, start the game
+                    if(thisGame.p1.ready && thisGame.p2.ready){
+                        console.log("starting the game");
+                        thisGame.status = "in progress";
+                        io.emit("start game");
+                    }
+
                 });
             }
 

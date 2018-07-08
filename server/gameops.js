@@ -27,6 +27,7 @@ var originalGame = {
         collecting: "health",
         moneyRate: 0.1,
         healthRate: 0.1,
+        ready: false,
         base: {
             color: "#6B769E",
             width: 40,
@@ -53,6 +54,7 @@ var originalGame = {
         collecting: "health",
         moneyRate: 0.1,
         healthRate: 0.1,
+        ready: false,
         base: {
             color: "#C900C2",
             width: 40,
@@ -97,12 +99,6 @@ function createNewGame(callback){
     game.id = Date.now();
     console.log("Created a new game with the ID: " + game.id);
     callback(game);
-}
-
-function resetGame(game){
-    game = JSON.parse(JSON.stringify(originalGame));    // make a deep copy
-    game = generateObstacles(game, 3);
-    return game;
 }
 
 function generateObstacles(thisGame, count){
@@ -505,7 +501,6 @@ function randBetween(min, max){
 
 module.exports.createNewGame = createNewGame;
 module.exports.movePlayer = movePlayer;
-module.exports.resetGame = resetGame;
 module.exports.createBullet = createBullet;
 module.exports.moveBullets = moveBullets;
 module.exports.healPlayer = healPlayer;

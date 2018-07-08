@@ -75,9 +75,12 @@ var hyperCollectMP3 = new Audio('../../assets/hyperCollect.mp3');
 var berserkCollectMP3 = new Audio('../../assets/berserkCollect.mp3');
 var shieldCollectMP3 = new Audio('../../assets/shieldCollect.mp3');
 
-
 var cashRegisterMP3 = new Audio('../../assets/cash.mp3');
 var whooshMP3 = new Audio('../../assets/whoosh.mp3');
+
+var soundtrackMP3 = new Audio('../../assets/soundtrackMIDI.mp3');
+
+
 
 var gameID, player;
 
@@ -404,7 +407,6 @@ function drawBullets(){
 function shoot(){
 
     if(currentGame.status == "in progress" && currentGame[thisPlayer] && currentGame[thisPlayer].bullets > 0){
-        console.log("shooting");
         zapMP3.currentTime = 0;
         zapMP3.play();
 
@@ -426,17 +428,17 @@ $("body").on("click", "#update", function(){
     socket.emit("update game");
 });
 
-$("body").on("click", "#reset", function(){
-    socket.emit("reset game");
-});
-
-
 $("body").on("click", "#offset", function(){
     offsetOn = (offsetOn) ? false : true;
 
     if(!offsetOn){
         offset.x = offset.y = 0;
     }
+});
+
+$("body").on("click", "#ready-up", function(){
+    socket.emit("ready up");
+   $("#ready-modal").hide(); 
 });
 
 
@@ -520,12 +522,22 @@ $("body").on("click", "#activate-invisibility", function(){
 
 // SOCKET CODE
 
+
+socket.on('start game', function(){
+
+    // start the soundtrack
+
+    soundtrackMP3.currentTime = 0;
+    soundtrackMP3.volume = 0.2;
+    // soundtrackMP3.play();
+
+});
+
 // when we get an updated game, set current game to updated game.
 socket.on('updated game', function(newData, sound){
 
 
     currentGame = scaleGame(newData.game)
-    console.log(newData.player);
 
     // TURN OFFSET ON
 

@@ -192,3 +192,18 @@ pre {
     letter-spacing: 5px;
 }
 
+/* ready modal */
+
+#ready-modal{
+    padding: 20px;
+    border: 1px solid black;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    position: absolute;
+    background: white;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
