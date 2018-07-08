@@ -13,8 +13,6 @@ const app = express();
 const http = require("http").Server(app);
 var io  = require('socket.io')(http);
 
-var userCount = 0;
-
 app.set("port", process.env.PORT || 3000)                       // we're gonna start a server on whatever the environment port is or on 3000
 app.use(express.static('public'));                              // sets the correct root directory for static files we're going to serve
 app.set("views", path.join(__dirname, "/public"));              // tells us where our views are
@@ -22,14 +20,11 @@ app.set("view engine", "ejs");                                  // tells us what
 
 app.use(express.static('public'));                              // sets the correct directory for static files we're going to serve - I believe this whole folder is sent to the user
 
-const dbops = require("./server/dbops");
-const database = require("./server/database");
-const game = require("./server/game");
+const gameops = require("./server/gameops");
 
-var thisGame = {
-    p1: false,
-    p2: false
-}
+
+// games currently stored on the server - later, consider moving this to DB
+var currentGames = {}
 
 
 
@@ -85,155 +80,224 @@ MongoClient.connect(dbAddress, function(err, client){
 
     /* ROUTES */
 
-        io.on('connection', function(socket){
-
-
-
-            // figure out if this is P1, P2, or a spectator
-
-
-
-
-            if(!thisGame.p1){
-                thisGame.p1 = true;
-                thisGame[socket.id] = "p1"
-            } else if(!thisGame.p2){
-                thisGame.p2 = true;
-                thisGame[socket.id] = "p2"
-            }
-
-            var thisPlayer = thisGame[socket.id];
-            var otherPlayer = (thisPlayer == "p1") ? "p2" : "p1";
-
-
-
-            var thisConnection = setInterval(function(){
-
-                // this is effectively the game loop
-
-                var updatedGame = game.getGame();
-
-
-
-                var newData = {
-                    game: updatedGame,
-                    player: thisPlayer
-                }
-
-
-                // get the sound from the queue
-
-               // console.log(newData.game[thisPlayer]);
-
-                var sound = newData.game[thisPlayer].queuedUpSounds.shift()
-
-                socket.emit("updated game", newData, sound)
-
-                game.healPlayer(thisPlayer);
-                game.makeMoney(thisPlayer);
-                game.moveBullets(thisPlayer);
-                
-
-                if (updatedGame[otherPlayer] && updatedGame[otherPlayer].hp <= 0){
-                    console.log("GAME OVER!");
-                    updatedGame.status = "gameover";
-                    updatedGame.winner = thisPlayer;
-                    io.emit("gameover", thisPlayer)
-                }
-
-
-            }, 20)
-
-
-            console.log("a user connected");
-            userCount++;
-            console.log("User count is now: " + userCount);
-
-            socket.on("disconnect", function(){
-
-                // stop sending updates
-                clearInterval(thisConnection);
-
-                // remove player info from game file
-
-                thisGame[thisPlayer] = false;
-                delete thisPlayer;  
-
-                console.log("post leave");
-                console.log(thisGame);
-
-
-                console.log("user disconnected");
-                userCount--;
-                console.log("User count is now: " + userCount);
-
-                if(userCount == 0){
-                    console.log("resetting game!");
-                    game.newGame();
-                }
-            });
-
-            socket.on("reset game", function(){
-                console.log("resetting game");
-                game.newGame();
-            })
-
-            socket.on("move player", function(dir){
-                game.movePlayer(dir, thisPlayer);
-            })
-
-            socket.on("shoot", function(target){
-                game.createBullet(target, thisPlayer, io);         // this is messy
-            })
-
-            socket.on("buy bullets", function(target){
-                game.buy(thisPlayer, "bullets", socket);         // this is messy
-            })
-
-            socket.on("buy stun", function(target){
-                game.buy(thisPlayer, "stun", socket);         // this is messy
-            })
-
-            socket.on("buy invisibility", function(target){
-                game.buy(thisPlayer, "invisibility", socket);         // this is messy
-            })
-
-            socket.on("activate stun", function(target){
-                game.activateStun(thisPlayer); 
-            })
-
-            socket.on("activate invisibility", function(target){
-                game.activateInvisibility(thisPlayer, io); 
-            })
-                
-
-        });
-
         app.get("/", function(req, res){
-            dbops.getAllGames(db, function(allGames){
-                console.log(allGames);
-                res.render("index", {games: allGames}); 
-            }); 
-        });
-
-        app.get("/game", function(req, res){
-            res.render("game"); 
+            //console.log(currentGames);
+            res.render("index", { games: currentGames }); 
         });
 
         app.get("/reset", function(req, res){
-            game.resetGame(); 
+            gameops.resetGame(); 
+            res.redirect("/");
+        })
+
+        app.get("/clear", function(req, res){
+            currentGames = {};
             res.redirect("/");
         })
 
 
         app.get("/new-game", function(req, res){
 
-            dbops.createNewGame(db, function(id){
+            gameops.createNewGame(function(game){
+                currentGames[game.id] = game;
                 res.redirect("/");           // later to /:id
             }); 
         });
 
+        app.get("/game/:id/:player", function(req, res){
 
+            console.log("Trying to enter game " + req.params.id + " as player " + req.params.player);
+
+            var thisGame = null;    
+
+            if(currentGames[req.params.id] != null && typeof(currentGames[req.params.id] != "undefined")){
+
+                // create game
+                thisGame = currentGames[req.params.id];
+
+                // when a player connects, based on params whether this can be added as a P1, or a P2
+
+                var thisPlayer, otherPlayer;
+
+                // figure out if this is P1, P2, or a spectator
+
+                if(req.params.player == "1"){
+                    thisPlayer = "p1";
+                    otherPlayer = "p2";
+                } else if (req.params.player == "2"){
+                    thisPlayer = "p2";
+                    otherPlayer = "p1";
+                } else {
+                    thisPlayer = "spectator";
+                }
+
+              
+                if(thisGame.participants[thisPlayer] == null || thisPlayer == "spectator"){
+
+                    io.on('connection', function(socket){   
+                        console.log("A USER CONNECTED: " + socket.id);
+                        if(thisPlayer == "p1"  || thisPlayer == "p2"){
+                            
+                            if(thisGame.participants[thisPlayer] == null){
+                                console.log("Setting player " + thisPlayer + " id as: " + socket.id);
+                                thisGame.participants[thisPlayer] = socket.id;
+                            }
+                        } else {
+                            // if it IS a spectator, push to the spectators array:
+                            thisGame.participants.spectators.push(socket.id);
+                        }  
+
+                        // if both players connected, start the game
+                        if(thisGame.status == "setup" && thisGame.participants.p1 != null && thisGame.participants.p2 != null){
+                            console.log("starting the game!");
+                            thisGame.status = "in progress";
+                        } else {
+                            console.log("still setting up");
+                        }
+
+                        // send first update
+                        var newData = {
+                            game: thisGame,
+                            player: thisPlayer
+                        }
+
+                        socket.emit("updated game", newData, [])                     
+
+                        // console.log("this user id is: " + socket.id);
+
+                        var thisConnection = setInterval(function(){
+
+                            // this is effectively the game loop
+                            // only run it if both players are connected
+
+                            // HAVE START ANIMATION!
+
+                            if(thisGame.participants.p1 != null && thisGame.participants.p2 != null){
+
+                                var updatedGame = thisGame;
+
+                                var newData = {
+                                    game: updatedGame,
+                                    player: thisPlayer
+                                }
+
+
+                                // get the sound from the queue
+
+                               // console.log(newData.game[thisPlayer]);
+
+                                var sound = newData.game[thisPlayer].queuedUpSounds.shift()
+
+                                socket.emit("updated game", newData, sound)
+
+                                gameops.healPlayer(thisGame, thisPlayer);
+                                gameops.makeMoney(thisGame, thisPlayer);
+                                gameops.moveBullets(thisGame, thisPlayer);
+                                
+
+                                if (updatedGame[otherPlayer] && updatedGame[otherPlayer].hp <= 0){
+                                    console.log("GAME OVER!");
+                                    updatedGame.status = "gameover";
+                                    updatedGame.winner = thisPlayer;
+                                    io.emit("gameover", thisPlayer)
+                                }
+                            }
+                        }, 20)
+
+                        socket.on("disconnect", function(){
+
+                            console.log("A USER DISCONNECTED: " + socket.id);
+
+                            // stop sending updates
+                            
+
+                            // remove player info from game file
+                            if(thisPlayer == "p1" || thisPlayer == "p2"){
+                                console.log("the id for thisPlayer, " + thisPlayer + ", is " + thisGame.participants[thisPlayer]);
+                                thisGame.participants[thisPlayer] == null;
+                                console.log(thisGame.participants);
+                            }
+                            
+                            console.log("post-disconnect:");
+                            console.log(thisGame.participants);
+
+                            // if everyone leaves, delete the game
+                            if(thisGame.participants.p1 == null && thisGame.participants.p2 == null && thisGame.participants.spectators.length == 0){
+                                console.log("deleting game!");
+                                delete currentGames[thisGame.id];
+                            }
+
+                            // send first update
+                            var newData = {
+                                game: thisGame,
+                                player: thisPlayer
+                            }
+
+                            socket.emit("updated game", newData, [])  
+
+
+                            clearInterval(thisConnection);
+                        });
+
+                        socket.on("reset game", function(){
+                            console.log("resetting game");
+                            gameops.newGame();
+                        });
+
+                        socket.on("move player", function(dir){
+                            console.log("socket " + socket.id + " received a signal to move: " + thisPlayer);
+
+
+                            var playerToMove;
+
+                            if(thisGame.participants.p1 == socket.id){
+                                playerToMove = "p1";
+                            } else if(thisGame.participants.p2 == socket.id){
+                                playerToMove = "p2";
+                            }
+
+                            gameops.movePlayer(thisGame, dir, playerToMove);
+                        });
+
+                        socket.on("shoot", function(target){
+                            gameops.createBullet(thisGame, target, thisPlayer, io);         // this is messy
+                        });
+
+                        socket.on("buy bullets", function(target){
+                            gameops.buy(thisGame, thisPlayer, socket, "bullets");         // this is messy
+                        });
+
+                        socket.on("buy stun", function(target){
+                            gameops.buy(thisGame, thisPlayer, socket, "stun");         // this is messy
+                        });
+
+                        socket.on("buy invisibility", function(target){
+                            gameops.buy(thisGame, thisPlayer, socket, "invisibility");         // this is messy
+                        });
+
+                        socket.on("activate stun", function(target){
+                            gameops.activateStun(thisGame, thisPlayer); 
+                        });
+
+                        socket.on("activate invisibility", function(target){
+                            gameops.activateInvisibility(thisGame, thisPlayer, io); 
+                        });
+                    });
+
+
+                    res.render("game");
+
+                } else {
+                    console.log("The slot for " + req.params.player + " is already taken");
+                    res.redirect("/")
+                }                        
+        
+            } else {
+                console.log("that's not a real game");
+                res.redirect("/")
+            }
+
+        });
 
 
     /* END ROUTES */
@@ -243,7 +307,6 @@ MongoClient.connect(dbAddress, function(err, client){
 
         app.use(function(req, res) {
             res.status(404);
-            req.session.error = "404 - page not found!";
             res.redirect("/");
         });
 

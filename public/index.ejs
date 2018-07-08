@@ -18,8 +18,8 @@
     </HEAD>
 
     <BODY id = "homepage">
-
-        <h1>Shootout!</h1>
+        <a href = "/clear"><button>clear</button></a>
+        <h1><a href = "/">Shootout!</a></h1>
 
 
         <button class = "game-button" id = "new-game" onclick="location.href='/new-game'">New Game</button>
@@ -27,21 +27,36 @@
         <hr>
 
 
-        <% for(var i = 0; i < games.length; i++) { %>
+        <% for(key in games) { %>
 
-            <% var game = games[i] %>
+            <% var game = games[key] %>
 
+            <a href = "<%= 'game/' +  game.id  + '/1'%>">
+                <button class = "game-button" id = "<%= game.id %>">
+                    <div class = "game-button-container">
+                        <div class = "game-info-name"><%= game.id %></div>
+                        <div class = "game-info-players">
+                            <% var p1class = (game.participants.p1) ? "filled" : "empty" %>
+                            <% var p2class = (game.participants.p2) ? "filled" : "empty" %>
 
-            <button class = "game-button" id = " <%= game.id %> " onclick="location.href='/game/' + <%= game.id %>">
-                <div class = "game-button-container">
-                    <div class = "game-info-name"><%= game.id %></div>
-                    <div class = "game-info-players">
-                        <span class = "p1"></span>
-                        <span class = "p2"></span>
+                            <div class = "player-circle-container"><p>p1</p><span class = "player-circle <%= p1class %>"></span></div>
+                            <div class = "player-circle-container"><p>p2</p><span class = "player-circle <%= p2class %>"></span></div>
+                        </div>
                     </div>
-                </div>
-            </button>
+                </button>
+            </a>
             <br>    
+
+        <% } %>
+
+        <hr>
+        <h3>Game data:</h3>
+
+        <% for(key in games) { %>
+
+            <% var game = games[key] %>
+
+            <pre><%= JSON.stringify(game, undefined, 4) %></pre>
 
         <% } %>
 
@@ -50,9 +65,8 @@
 
 
 
-
         <script src="https://cdn.socket.io/socket.io-1.4.0.js"></script>
         <script src="https://code.jquery.com/jquery-2.2.4.min.js" integrity="sha256-BbhdlvQf/xTY9gja0Dq3HiwQF8LaCRTXxZKRutelT44=" crossorigin="anonymous"></script>
-        <script type="text/javascript" src = "./setup.js"></script>
+        <script type="text/javascript" src = "../setup.js"></script>
     </BODY>
 </HTML>

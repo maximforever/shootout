@@ -3,7 +3,8 @@ var socket = io();
 
 /* GLOBAL VARS */
 var canvas = document.getElementById("canvas");
-var ctx = canvas.getContext('2d');
+var ctx = canvas.getContext('2d'); 
+
 
 var animationSpeed = 20;
 
@@ -29,44 +30,44 @@ var currentGame = {
 
 // load up images for canvas 
 var healthImage = new Image();
-healthImage.src = "assets/icons/health.png";
+healthImage.src = "../../assets/icons/health.png";
 
 var moneyImage = new Image();
-moneyImage.src = "assets/icons/money.png";
+moneyImage.src = "../../assets/icons/money.png";
 
 var mountains = new Image();
-mountains.src = "assets/patterns/mountains2.png";
+mountains.src = "../../assets/patterns/mountains2.png";
 
 
 
 var p1image = new Image();
-p1image.src = "assets/icons/bluePlayer.png";
+p1image.src = "../../assets/icons/bluePlayer.png";
 
 var p2image = new Image();
-p2image.src = "assets/icons/redPlayer.png";
+p2image.src = "../../assets/icons/redPlayer.png";
 
 
 
 /* audio */
 
-var zapMP3 = new Audio('assets/zap.mp3');
-var stunMP3 = new Audio('assets/stun.mp3');
-var hitMP3 = new Audio('assets/hit.mp3');
-var thumpMP3 = new Audio('assets/thump.mp3');
+var zapMP3 = new Audio('../../assets/zap.mp3');
+var stunMP3 = new Audio('../../assets/stun.mp3');
+var hitMP3 = new Audio('../../assets/hit.mp3');
+var thumpMP3 = new Audio('../../assets/thump.mp3');
 
-var hpMP3 = new Audio('assets/hp.mp3');
-var berserkMP3 = new Audio('assets/berserk.mp3');
-var hyperspeedMP3 = new Audio('assets/hyperspeed.mp3');
-var bulletsMP3 = new Audio('assets/bullets.mp3');
-var shieldMP3 = new Audio('assets/shield.mp3');
+var hpMP3 = new Audio('../../assets/hp.mp3');
+var berserkMP3 = new Audio('../../assets/berserk.mp3');
+var hyperspeedMP3 = new Audio('../../assets/hyperspeed.mp3');
+var bulletsMP3 = new Audio('../../assets/bullets.mp3');
+var shieldMP3 = new Audio('../../assets/shield.mp3');
 
-var hyperCollectMP3 = new Audio('assets/hyperCollect.mp3');
-var berserkCollectMP3 = new Audio('assets/berserkCollect.mp3');
-var shieldCollectMP3 = new Audio('assets/shieldCollect.mp3');
+var hyperCollectMP3 = new Audio('../../assets/hyperCollect.mp3');
+var berserkCollectMP3 = new Audio('../../assets/berserkCollect.mp3');
+var shieldCollectMP3 = new Audio('../../assets/shieldCollect.mp3');
 
 
-var cashRegisterMP3 = new Audio('assets/cash.mp3');
-var whooshMP3 = new Audio('assets/whoosh.mp3');
+var cashRegisterMP3 = new Audio('../../assets/cash.mp3');
+var whooshMP3 = new Audio('../../assets/whoosh.mp3');
 
 
 
@@ -105,12 +106,12 @@ function gameLoop(){
 
     clear();
 
-    if(currentGame != null && typeof(currentGame) != "undefined" && currentGame.status != "gameover") { 
+    if(currentGame != null && typeof(currentGame) != "undefined" && currentGame.background != "white") { 
         drawBoard(currentGame);
-    } else {
-        drawBoard(currentGame);
-        text(currentGame.winner + " has won.", WIDTH/2, HEIGHT/2, 30*scaleMultiplier, "white", true);
+    } 
 
+    if(currentGame.status == "gameover"){
+        text(currentGame.winner + " has won.", WIDTH/2, HEIGHT/2, 30*scaleMultiplier, "white", true);
     }
     
     var animationCycle = setTimeout(function(){ requestAnimationFrame(gameLoop) }, animationSpeed);
@@ -118,30 +119,44 @@ function gameLoop(){
 }
 
 function sendMovement(){
-    if(currentGame.status != "gameover"){
-        if(keypressLeft){ socket.emit("move player", 65) }
-        if(keypressRight){ socket.emit("move player", 83) }
-        if(keypressDown){ socket.emit("move player", 68) }
-        if(keypressUp){ socket.emit("move player", 87) }   
+    if(currentGame.status == "in progress"){
+
+        if(keypressLeft){
+            console.log("moving player Left");
+            socket.emit("move player", 65) 
+        }
+        
+        if(keypressRight){
+            console.log("moving player Right");
+            socket.emit("move player", 83) 
+        }
+        
+        if(keypressDown){
+            console.log("moving player Down");
+            socket.emit("move player", 68) 
+        }
+        
+        if(keypressUp){
+            console.log("moving player Up");
+            socket.emit("move player", 87) 
+        }   
     }
+
 }
 
 
 function drawBoard(game){
 
     drawBackround(game.background);
-    sendMovement();
-
-
     drawShotLine();
     
     
-    if(game.p1){ 
+    if(game.participants.p1){ 
         drawBase("p1")
         drawPlayer(game.p1) 
     }
 
-    if(game.p2){ 
+    if(game.participants.p2){ 
         drawBase("p2")
         drawPlayer(game.p2) 
     }
@@ -150,7 +165,10 @@ function drawBoard(game){
     drawBullets();
 
 
-
+    if(currentGame.status == "in progress"){
+        sendMovement();
+    }
+    
 
 
 
@@ -355,7 +373,7 @@ function drawBullets(){
 function shoot(){
 
 
-    if(currentGame.status != "gameover" && currentGame[thisPlayer] && currentGame[thisPlayer].bullets > 0){
+    if(currentGame.status != "in progress" && currentGame[thisPlayer] && currentGame[thisPlayer].bullets > 0){
 
         zapMP3.currentTime = 0;
         zapMP3.play();
@@ -463,8 +481,17 @@ $("body").on("keyup", function(e){
 
 // when we get an updated game, set current game to updated game.
 socket.on('updated game', function(newData, sound){
+
+
+
+
     currentGame = scaleGame(newData.game)
+
+    currentGame = newData.game;
     thisPlayer = newData.player;
+
+    // delete this later
+    $("#game-json").html(JSON.stringify(currentGame, undefined, 4))
 
     if(sound != null){
 
@@ -694,3 +721,4 @@ function scaleGame(game){
 
 
 }
+

@@ -1,7 +1,8 @@
 // game operations go here
 
 var originalGame = {
-    status: "in progress",
+    id: null,
+    status: "setup",
     background: "#00447C",
     winner: "",
     participants: {
@@ -88,9 +89,20 @@ var itemStore = {
     },
 }
 
-function resetGame(){
+
+
+function createNewGame(callback){
+    var game = JSON.parse(JSON.stringify(originalGame));    // make a deep copy
+    game = generateObstacles(game, 3);
+    game.id = Date.now();
+    console.log("Created a new game with the ID: " + game.id);
+    callback(game);
+}
+
+function resetGame(game){
     game = JSON.parse(JSON.stringify(originalGame));    // make a deep copy
     game = generateObstacles(game, 3);
+    return game;
 }
 
 function generateObstacles(thisGame, count){
@@ -117,7 +129,7 @@ function generateObstacles(thisGame, count){
                 height: randBetween(20, 50)
             };
 
-            if(!rectanglesCollide(thisObstace)){
+            if(!rectanglesCollide(thisGame, thisObstace)){
                 console.log("generated top obstacle #" + topObstacles + " on try " + topTries);
                 thisGame.obstacles.push(thisObstace);
                 topObstacles++;
@@ -135,7 +147,7 @@ function generateObstacles(thisGame, count){
                 height: randBetween(20, 100)
             };
 
-            if(!rectanglesCollide(thisObstace)){
+            if(!rectanglesCollide(thisGame, thisObstace)){
                 console.log("generated bottom obstacle #" + bottomObstacles + " on try " + bottomTries);
                 thisGame.obstacles.push(thisObstace);
                 bottomObstacles++;
@@ -149,16 +161,17 @@ function generateObstacles(thisGame, count){
     
 }
 
+// !!!
+//var game = JSON.parse(JSON.stringify(originalGame));         
 
+function setGame(thisGame){
 
+    game = thisGame;
 
-var game = JSON.parse(JSON.stringify(originalGame));         
-
-function getGame(){
-    return game;
 }
 
-function movePlayer(dir, player){
+
+function movePlayer(game, dir, player){
 
     dir = parseInt(dir);
     var otherPlayer = (player == "p2") ? "p1" : "p2";
@@ -171,7 +184,7 @@ function movePlayer(dir, player){
     var moveFactor = 3;             // the larger this is, the less the player moves
 
     if(game[player].stunnedEndTime > Date.now()){ 
-        moveFactor = 6 
+        moveFactor = 6;             
     }
 
     // figre out where the player will be
@@ -211,6 +224,9 @@ function movePlayer(dir, player){
         }
     });
 
+    console.log("player pre move:");
+    console.log(game[player]);
+
     if(canGoThere){ 
         game[player].x = newLocation.x;
         game[player].y = newLocation.y;
@@ -222,9 +238,13 @@ function movePlayer(dir, player){
     if(game[player].x < game[player].size){  game[player].x = game[player].size }
     if(game[player].x > (400 - game[player].size)){  game[player].x = (400 - game[player].size) }
 
+
+    console.log("player post move:");
+    console.log(game[player]);
+
 }
 
-function healPlayer(player){
+function healPlayer(game, player){
 
     player = game[player];
 
@@ -245,7 +265,7 @@ function healPlayer(player){
 
 }
 
-function makeMoney(player){
+function makeMoney(game, player){
     player = game[player];
     if(player && player.collecting == "money"){
         player.money += player.moneyRate; 
@@ -253,7 +273,7 @@ function makeMoney(player){
 }
 
 
-function createBullet(target, thisPlayer, io){
+function createBullet(game, target, thisPlayer, io){
 
 
     if(game[thisPlayer] && game[thisPlayer].bullets == 0){
@@ -298,7 +318,7 @@ function createBullet(target, thisPlayer, io){
 
 }
 
-function moveBullets(io){
+function moveBullets(game, io){
 
     for(var i = 0; i < game.bullets.length; i++){
 
@@ -307,9 +327,8 @@ function moveBullets(io){
         if(!bullet.expired){
 
 
-
-            checkForBulletHits(bullet, io);
-            checkForObstacleHits(bullet);
+            checkForBulletHits(game, bullet, io);
+            checkForObstacleHits(game, bullet);
 
             if(bullet.x < 400 && bullet.x > 0 && bullet.y < 300 && bullet.y > 0 && !bullet.expired){
                 bullet.x += bullet.deltaX*bullet.speed;
@@ -341,7 +360,7 @@ function moveBullets(io){
     }
 }
 
-function checkForBulletHits(bullet, io){
+function checkForBulletHits(game, bullet, io){
 
     var otherPlayer = (bullet.player == "p2") ? "p1" : "p2";
 
@@ -361,7 +380,7 @@ function checkForBulletHits(bullet, io){
     }
 }
 
-function checkForObstacleHits(bullet){
+function checkForObstacleHits(game, bullet){
 
     game.obstacles.forEach(function(obstacle){
         if(inRectangle(bullet.x, bullet.y, obstacle)){ bullet.expired = true; }
@@ -384,7 +403,7 @@ function checkForObstacleHits(bullet){
 // BUY FUNCTIONS
 
 
-function buy(player, item, socket){
+function buy(game, player, socket, item){
     console.log("buying " + item);
     player = game[player];
     var thisItem = itemStore[item];            // itemStore holds objects that describe the items & prices
@@ -412,7 +431,7 @@ function buy(player, item, socket){
 // POWERUP FUNCTUINS
 
 
-function activateStun(player){
+function activateStun(game, player){
 
     if(game[player].stun > 0 && game[player].stunBulletEndTime <= Date.now()){           // if player not currently stunning
         game[player].stun--;
@@ -422,7 +441,7 @@ function activateStun(player){
     }
 }
 
-function activateInvisibility(player, io){
+function activateInvisibility(game, player, io){
 
     console.log(Date.now());
     console.log(game[player].invisibilityEndTime);
@@ -455,14 +474,14 @@ function inRectangle(x, y, rect){
     return colliding;
 }
 
-function rectanglesCollide(rectangle){
+function rectanglesCollide(thisGame, rectangle){
 
     var colliding = false;
 
-    if(game.obstacles.length > 0){
+    if(thisGame.obstacles.length > 0){
 
         // check every point of the rectangle for collision
-        game.obstacles.forEach(function(obstacle){
+        thisGame.obstacles.forEach(function(obstacle){
             if(inRectangle(rectangle.x, rectangle.y, obstacle)){ colliding = true; }
             if(inRectangle(rectangle.x + rectangle.width, rectangle.y, obstacle)){ colliding = true; }
             if(inRectangle(rectangle.x, rectangle.y + rectangle.height , obstacle)){ colliding = true; }
@@ -479,11 +498,7 @@ function randBetween(min, max){
     return Math.floor(Math.random() * (max - min) + min);
 }
 
-
-
-
-
-module.exports.getGame = getGame;
+module.exports.createNewGame = createNewGame;
 module.exports.movePlayer = movePlayer;
 module.exports.resetGame = resetGame;
 module.exports.createBullet = createBullet;
