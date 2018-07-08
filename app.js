@@ -284,9 +284,7 @@ MongoClient.connect(dbAddress, function(err, client){
                 });
 
                 socket.on("shoot", function(target){
-                    console.log(thisPlayer + "is trying to shoot");
                     if(thisGame.status == "in progress"){
-                        console.log(thisPlayer + " is shooting");
                         gameops.createBullet(thisGame, target, thisPlayer, io);         // this is messy
                     }
                 });

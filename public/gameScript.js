@@ -27,6 +27,11 @@ var currentGame = {
     background: "white"
 }
 
+var offset = {
+    x: 0,
+    y: 0
+}
+
 
 // load up images for canvas 
 var healthImage = new Image();
@@ -37,6 +42,9 @@ moneyImage.src = "../../assets/icons/money.png";
 
 var mountains = new Image();
 mountains.src = "../../assets/patterns/mountains2.png";
+
+var building = new Image();
+building.src = "../../assets/patterns/building.png";
 
 
 
@@ -208,20 +216,48 @@ function drawBoard(game){
 }
 
 function drawBackround(color){
-    rect(0, 0, WIDTH, HEIGHT, color)
+
+    rect(-WIDTH, -HEIGHT, WIDTH*3, HEIGHT*3, "black");
+    rect(0, 0, WIDTH, HEIGHT, color);      // 
+    //rect(0, 0, WIDTH, HEIGHT, color);
 }
 
 function drawPlayer(player){
     //console.log(player.player);
 
 
+
+
+
+
+
+
     var image = (player.player == 1) ? p1image : p2image;
 
     ctx.save();
-    //ctx.rotate(Math.atan2(lastX, lastY) * 180 / Math.PI);
-    //ctx.translate(player.x, player.y);
-    //ctx.rotate(180*180/ Math.PI);
 
+    // move to the center of the canvas
+    //ctx.translate(WIDTH/2,HEIGHT/2);
+
+    // rotate the canvas to the specified degrees
+//    ctx.rotate(90*Math.PI/180);
+    
+
+/*    function getAngle(x1, y1, x2, y2) {
+        var dx = x1 - x2;
+        var dy = y1 - y2;
+        var defaultDegrees = Math.atan2(dy,dx) * 180/Math.PI;
+
+        var shiftedAngle = defaultDegrees + 180 -90;       
+        return shiftedAngle;
+    }
+*/
+
+
+    // var angleDeg = getAngle(player.x, player.y, lastX, lastY);
+    //console.log(angleDeg);
+
+    //ctx.rotate(angleDeg);
     
     player.color = "rgba(255, 255, 255, 0)";
 
@@ -250,9 +286,9 @@ function drawPlayer(player){
     } else {
             // 1.5*player.size ensures the image is ligned up correctly within a circle
                                         
-        ctx.drawImage(image, player.x - 1.5*player.size, player.y- player.size*2, player.size*3, player.size*3);
+        ctx.drawImage(image, player.x - 1.5*player.size + offset.x , player.y- player.size*2 + offset.y , player.size*3, player.size*3);
         player.color = "rgba(255, 255, 255, 0)";
-        circle(player.x, player.y, player.size, player.color, true);
+        circle(player.x , player.y , player.size, player.color, true);
         rect(player.x - player.size - 5, player.y - player.size*2, healthBarWidth, healthBarWidth/6, "red", true);
         rect(player.x - player.size - 5, player.y - player.size*2, healthWidth, healthBarWidth/6, "green", false);
     }
@@ -311,13 +347,10 @@ function drawBase(player){
 
 function drawObstacles(){
 
-
-
     if(currentGame.obstacles){
-
         currentGame.obstacles.forEach(function(obstacle){
-            var mountainPattern = ctx.createPattern(mountains, 'repeat');
-            rect(obstacle.x, obstacle.y, obstacle.width, obstacle.height, "black" ); //mountainPattern);
+            var buildingPattern = ctx.createPattern(building, 'repeat');
+            rect(obstacle.x, obstacle.y, obstacle.width, obstacle.height, "black");//buildingPattern);
         })
 
     }
@@ -326,8 +359,8 @@ function drawObstacles(){
 
 function drawShotLine(){
     if(thisPlayer){
-        circle(lastX, lastY, 5, "pink", true );
-        line(currentGame[thisPlayer].x, currentGame[thisPlayer].y, lastX, lastY, 1)
+        circle(lastX - offset.x, lastY - offset.y, 5, "pink", true );
+        line(currentGame[thisPlayer].x, currentGame[thisPlayer].y, lastX - offset.x, lastY - offset.y, 1)
     } 
 }
 
@@ -480,9 +513,25 @@ $("body").on("click", "#activate-invisibility", function(){
 socket.on('updated game', function(newData, sound){
 
 
-
-
     currentGame = scaleGame(newData.game)
+    console.log(newData.player);
+
+    // TURN OFFSET ON
+
+    var offsetOn = false;
+
+    if(offsetOn && typeof(currentGame[newData.player]) != "undefined" ){
+        offset.x = WIDTH/2 - currentGame[newData.player].x;
+        offset.y = HEIGHT/2 - currentGame[newData.player].y;
+    }
+
+
+/*
+    $("#offset-x").text(offset.x);
+    $("#offset-y").text(offset.y);
+    
+
+*/
 
     currentGame = newData.game;
     thisPlayer = newData.player;
@@ -556,7 +605,7 @@ function clear() {
 function circle(x,y,r, color, stroke) {
 
     ctx.beginPath();
-    ctx.arc(x, y, r, 0, Math.PI*2, false);               // start at 0, end at Math.PI*2
+    ctx.arc(x + offset.x, y + offset.y, r, 0, Math.PI*2, false);               // start at 0, end at Math.PI*2
 
     ctx.shadowBlur = 30;
     ctx.shadowColor = color;
@@ -579,7 +628,7 @@ function circle(x,y,r, color, stroke) {
 
 function rect(x,y,w,h, color) {
     ctx.beginPath();
-    ctx.rect(x,y,w,h);
+    ctx.rect(x + offset.x ,y + offset.y,w,h);
     ctx.closePath();
 
     ctx.strokeStyle = "black";
@@ -600,7 +649,7 @@ function text(text, x, y, size, color, centerAlign){
         ctx.textAlign = "left";
     }
 
-    ctx.fillText(text, x, y);
+    ctx.fillText(text, x + offset.x, y + offset.y);
 }
 
 
@@ -609,8 +658,8 @@ function line(x1, y1, x2, y2, color, width){
     //ctx.globalCompositeOperation = "destination-over";
     ctx.strokeStyle = color;
     ctx.lineWidth = width;
-    ctx.moveTo(x1,y1);
-    ctx.lineTo(x2,y2);
+    ctx.moveTo(x1 + offset.x,y1+ offset.y);
+    ctx.lineTo(x2+ offset.x,y2 + offset.y);
     ctx.stroke();
 }
 
@@ -623,8 +672,8 @@ function makeBullet(x1, y1, x2, y2, color, width){
     ctx.shadowColor = "#BA0E11";
     ctx.strokeStyle = color;
     ctx.lineWidth = width;
-    ctx.moveTo(x1,y1);
-    ctx.lineTo(x2,y2);
+    ctx.moveTo(x1 + offset.x, y1 + offset.y);
+    ctx.lineTo(x2 + offset.x, y2 + offset.y);
     ctx.stroke();
 
     ctx.globalAlpha = 1;
@@ -645,7 +694,7 @@ function drawBaseType(player){
         console.log(currentGame[player].collecting);
     }
 
-    ctx.drawImage(image, (currentGame[player].base.x + currentGame[player].base.width/2) - 20/2, (currentGame[player].base.y + currentGame[player].base.height/2) - 20/2, 20*scaleMultiplier, 20*scaleMultiplier);
+    ctx.drawImage(image, (currentGame[player].base.x + currentGame[player].base.width/2) - 20/2 + offset.x, (currentGame[player].base.y + currentGame[player].base.height/2) - 20/2 + offset.y, 20*scaleMultiplier, 20*scaleMultiplier);
 
 }
 
