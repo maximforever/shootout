@@ -26,6 +26,10 @@ const gameops = require("./server/gameops");
 // games currently stored on the server - later, consider moving this to DB
 var currentGames = {}
 
+// game currently being played:
+
+var thisGame = null; // this may be a huge problem later
+
 
 
 
@@ -106,9 +110,7 @@ MongoClient.connect(dbAddress, function(err, client){
 
         app.get("/game/:id/:player", function(req, res){
 
-            console.log("Trying to enter game " + req.params.id + " as player " + req.params.player);
-
-            var thisGame = null;    
+            console.log("Trying to enter game " + req.params.id + " as player " + req.params.player);   
 
             if(currentGames[req.params.id] != null && typeof(currentGames[req.params.id] != "undefined")){
 
@@ -117,176 +119,22 @@ MongoClient.connect(dbAddress, function(err, client){
 
                 // when a player connects, based on params whether this can be added as a P1, or a P2
 
-                var thisPlayer, otherPlayer;
+                var incomingPlayer, otherPlayer;
 
                 // figure out if this is P1, P2, or a spectator
 
                 if(req.params.player == "1"){
-                    thisPlayer = "p1";
-                    otherPlayer = "p2";
+                    incomingPlayer = "p1";
                 } else if (req.params.player == "2"){
-                    thisPlayer = "p2";
-                    otherPlayer = "p1";
+                    incomingPlayer = "p2";
                 } else {
-                    thisPlayer = "spectator";
+                    incomingPlayer = "spectator";
                 }
 
+                thisGame.incomingPlayer = incomingPlayer;
               
-                if(thisGame.participants[thisPlayer] == null || thisPlayer == "spectator"){
-
-                    io.on('connection', function(socket){   
-                        console.log("A USER CONNECTED: " + socket.id);
-                        if(thisPlayer == "p1"  || thisPlayer == "p2"){
-                            
-                            if(thisGame.participants[thisPlayer] == null){
-                                console.log("Setting player " + thisPlayer + " id as: " + socket.id);
-                                thisGame.participants[thisPlayer] = socket.id;
-                            }
-                        } else {
-                            // if it IS a spectator, push to the spectators array:
-                            thisGame.participants.spectators.push(socket.id);
-                        }  
-
-                        // if both players connected, start the game
-                        if(thisGame.status == "setup" && thisGame.participants.p1 != null && thisGame.participants.p2 != null){
-                            console.log("starting the game!");
-                            thisGame.status = "in progress";
-                        } else {
-                            console.log("still setting up");
-                        }
-
-                        // send first update
-                        var newData = {
-                            game: thisGame,
-                            player: thisPlayer
-                        }
-
-                        socket.emit("updated game", newData, [])                     
-
-                        // console.log("this user id is: " + socket.id);
-
-                        var thisConnection = setInterval(function(){
-
-                            // this is effectively the game loop
-                            // only run it if both players are connected
-
-                            // HAVE START ANIMATION!
-
-                            if(thisGame.participants.p1 != null && thisGame.participants.p2 != null){
-
-                                var updatedGame = thisGame;
-
-                                var newData = {
-                                    game: updatedGame,
-                                    player: thisPlayer
-                                }
-
-
-                                // get the sound from the queue
-
-                               // console.log(newData.game[thisPlayer]);
-
-                                var sound = newData.game[thisPlayer].queuedUpSounds.shift()
-
-                                socket.emit("updated game", newData, sound)
-
-                                gameops.healPlayer(thisGame, thisPlayer);
-                                gameops.makeMoney(thisGame, thisPlayer);
-                                gameops.moveBullets(thisGame, thisPlayer);
-                                
-
-                                if (updatedGame[otherPlayer] && updatedGame[otherPlayer].hp <= 0){
-                                    console.log("GAME OVER!");
-                                    updatedGame.status = "gameover";
-                                    updatedGame.winner = thisPlayer;
-                                    io.emit("gameover", thisPlayer)
-                                }
-                            }
-                        }, 20)
-
-                        socket.on("disconnect", function(){
-
-                            console.log("A USER DISCONNECTED: " + socket.id);
-
-                            // stop sending updates
-                            
-
-                            // remove player info from game file
-                            if(thisPlayer == "p1" || thisPlayer == "p2"){
-                                console.log("the id for thisPlayer, " + thisPlayer + ", is " + thisGame.participants[thisPlayer]);
-                                thisGame.participants[thisPlayer] == null;
-                                console.log(thisGame.participants);
-                            }
-                            
-                            console.log("post-disconnect:");
-                            console.log(thisGame.participants);
-
-                            // if everyone leaves, delete the game
-                            if(thisGame.participants.p1 == null && thisGame.participants.p2 == null && thisGame.participants.spectators.length == 0){
-                                console.log("deleting game!");
-                                delete currentGames[thisGame.id];
-                            }
-
-                            // send first update
-                            var newData = {
-                                game: thisGame,
-                                player: thisPlayer
-                            }
-
-                            socket.emit("updated game", newData, [])  
-
-
-                            clearInterval(thisConnection);
-                        });
-
-                        socket.on("reset game", function(){
-                            console.log("resetting game");
-                            gameops.newGame();
-                        });
-
-                        socket.on("move player", function(dir){
-                            console.log("socket " + socket.id + " received a signal to move: " + thisPlayer);
-
-
-                            var playerToMove;
-
-                            if(thisGame.participants.p1 == socket.id){
-                                playerToMove = "p1";
-                            } else if(thisGame.participants.p2 == socket.id){
-                                playerToMove = "p2";
-                            }
-
-                            gameops.movePlayer(thisGame, dir, playerToMove);
-                        });
-
-                        socket.on("shoot", function(target){
-                            gameops.createBullet(thisGame, target, thisPlayer, io);         // this is messy
-                        });
-
-                        socket.on("buy bullets", function(target){
-                            gameops.buy(thisGame, thisPlayer, socket, "bullets");         // this is messy
-                        });
-
-                        socket.on("buy stun", function(target){
-                            gameops.buy(thisGame, thisPlayer, socket, "stun");         // this is messy
-                        });
-
-                        socket.on("buy invisibility", function(target){
-                            gameops.buy(thisGame, thisPlayer, socket, "invisibility");         // this is messy
-                        });
-
-                        socket.on("activate stun", function(target){
-                            gameops.activateStun(thisGame, thisPlayer); 
-                        });
-
-                        socket.on("activate invisibility", function(target){
-                            gameops.activateInvisibility(thisGame, thisPlayer, io); 
-                        });
-                    });
-
-
+                if(thisGame.participants[incomingPlayer] == null || incomingPlayer == "spectator"){
                     res.render("game");
-
                 } else {
                     console.log("The slot for " + req.params.player + " is already taken");
                     res.redirect("/")
@@ -299,6 +147,183 @@ MongoClient.connect(dbAddress, function(err, client){
 
         });
 
+
+        /* SOCKET IO */
+
+        io.on('connection', function(socket){   
+
+
+            // when a player connects, based on params whether this can be added as a P1, or a P2
+
+            var thisPlayer, otherPlayer;
+
+            if(thisGame != null){
+
+                console.log("A USER CONNECTED: " + socket.id);
+                console.log("incomingPlayer: " + thisGame.incomingPlayer);
+                if(thisGame.incomingPlayer == "p1"  || thisGame.incomingPlayer == "p2"){                    
+                    if(thisGame.participants[thisGame.incomingPlayer] == null){
+                        console.log("Setting player " + thisGame.incomingPlayer + " id as: " + socket.id);
+                        thisGame.participants[thisGame.incomingPlayer] = socket.id;
+                    }
+                } else {
+                    // if it IS a spectator, push to the spectators array:
+                    thisGame.participants.spectators.push(socket.id);
+                }  
+
+                thisPlayer = thisGame.incomingPlayer;
+                thisGame.incomingPlayer = null;          // reset incoming player for the next player
+
+
+
+                // if both players connected, start the game
+                if(thisGame.status == "setup" && thisGame.participants.p1 != null && thisGame.participants.p2 != null){
+                    console.log("starting the game!");
+                    thisGame.status = "in progress";
+                } else {
+                    console.log("still setting up");
+                }
+
+                // send first update
+                var newData = {
+                    game: thisGame,
+                    player: thisPlayer
+                }
+
+                socket.emit("updated game", newData, [])                     
+
+                // console.log("this user id is: " + socket.id);
+
+                var thisConnection = setInterval(function(){
+
+                    // this is effectively the game loop
+                    // only run it if both players are connected
+
+                    // HAVE START ANIMATION!
+
+                    if(thisGame.participants.p1 != null && thisGame.participants.p2 != null){
+
+                        var updatedGame = thisGame;
+
+                        var newData = {
+                            game: updatedGame,
+                            player: thisPlayer
+                        }
+
+
+                        // get the sound from the queue
+
+                       // console.log(newData.game[thisPlayer]);
+
+                        var sound = newData.game[thisPlayer].queuedUpSounds.shift()
+
+                        socket.emit("updated game", newData, sound)
+
+                        gameops.healPlayer(thisGame, thisPlayer);
+                        gameops.makeMoney(thisGame, thisPlayer);
+                        gameops.moveBullets(thisGame, thisPlayer);
+                        
+
+                        if (updatedGame[otherPlayer] && updatedGame[otherPlayer].hp <= 0){
+                            console.log("GAME OVER!");
+                            updatedGame.status = "gameover";
+                            updatedGame.winner = thisPlayer;
+                            io.emit("gameover", thisPlayer)
+                        }
+                    }
+                }, 20)
+
+                socket.on("disconnect", function(){
+
+                    console.log("A USER DISCONNECTED: " + socket.id);
+
+                    // stop sending updates
+                    
+
+                    // remove player info from game file
+                    if(thisPlayer == "p1" || thisPlayer == "p2"){
+                        console.log("the id for thisPlayer, " + thisPlayer + ", is " + thisGame.participants[thisPlayer]);
+                        thisGame.participants[thisPlayer] = null;
+                        console.log(thisGame.participants);
+                    }
+                    
+                    console.log("post-disconnect:");
+                    console.log(thisGame.participants);
+
+                    // if everyone leaves, delete the game
+                    if(thisGame.participants.p1 == null && thisGame.participants.p2 == null && thisGame.participants.spectators.length == 0){
+                        console.log("deleting game!");
+                        delete currentGames[thisGame.id];
+                    }
+
+                    // send first update
+                    var newData = {
+                        game: thisGame,
+                        player: thisPlayer
+                    }
+
+                    socket.emit("updated game", newData, [])  
+
+
+                    clearInterval(thisConnection);
+                });
+
+                socket.on("reset game", function(){
+                    if(thisGame.status == "in progress"){
+                        console.log("resetting game");
+                        gameops.newGame();
+                    }
+                });
+
+                socket.on("move player", function(dir){
+                    if(thisGame.status == "in progress"){
+                        gameops.movePlayer(thisGame, dir, thisPlayer);
+                    }
+                });
+
+                socket.on("shoot", function(target){
+                    console.log(thisPlayer + "is trying to shoot");
+                    if(thisGame.status == "in progress"){
+                        console.log(thisPlayer + " is shooting");
+                        gameops.createBullet(thisGame, target, thisPlayer, io);         // this is messy
+                    }
+                });
+
+                socket.on("buy bullets", function(target){
+                    if(thisGame.status == "in progress"){
+                        gameops.buy(thisGame, thisPlayer, socket, "bullets");         // this is messy
+                    }
+                });
+
+                socket.on("buy stun", function(target){
+                    if(thisGame.status == "in progress"){
+                        gameops.buy(thisGame, thisPlayer, socket, "stun");         // this is messy
+                    }
+                });
+
+                socket.on("buy invisibility", function(target){
+                    if(thisGame.status == "in progress"){
+                        gameops.buy(thisGame, thisPlayer, socket, "invisibility");         // this is messy
+                    }
+                });
+
+                socket.on("activate stun", function(target){
+                    if(thisGame.status == "in progress"){
+                        gameops.activateStun(thisGame, thisPlayer); 
+                    }
+                });
+
+                socket.on("activate invisibility", function(target){
+                    if(thisGame.status == "in progress"){
+                        gameops.activateInvisibility(thisGame, thisPlayer, io); 
+                    }
+                });
+            }
+
+        });
+
+
+        
 
     /* END ROUTES */
 

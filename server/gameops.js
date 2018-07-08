@@ -173,7 +173,6 @@ function setGame(thisGame){
 
 function movePlayer(game, dir, player){
 
-    dir = parseInt(dir);
     var otherPlayer = (player == "p2") ? "p1" : "p2";
 
     var newLocation = {
@@ -181,21 +180,35 @@ function movePlayer(game, dir, player){
         y: game[player].y
     };
 
-    var moveFactor = 3;             // the larger this is, the less the player moves
+    var moveFactor = 2;             // the larger this is, the less the player moves
 
     if(game[player].stunnedEndTime > Date.now()){ 
-        moveFactor = 6;             
+        moveFactor *= 2;            // double the move factor - slow down by 2       
     }
 
-    // figre out where the player will be
-    if(dir == 65){
+    console.log("dir is "+ dir)
+
+    // figure out where the player will be
+    if(dir == "Left"){
         newLocation.x -= game[player].size/moveFactor;
-    } else if(dir == 68){
+    } else if(dir == "Right"){
         newLocation.x += game[player].size/moveFactor;
-    } else if(dir == 83){
+    } else if(dir == "Down"){
         newLocation.y += game[player].size/moveFactor;
-    } else if(dir == 87){
+    } else if(dir == "Up"){
         newLocation.y -= game[player].size/moveFactor;
+    } else if(dir == "UpLeft"){
+        newLocation.x -= game[player].size/moveFactor/Math.sqrt(2);      // we divide by Math.sqrt(2) so that diagonal moves still only move by 1 unit (not faster than Up/Right/Down/Left)
+        newLocation.y -= game[player].size/moveFactor/Math.sqrt(2);
+    } else if(dir == "UpRight"){
+        newLocation.x += game[player].size/moveFactor/Math.sqrt(2);
+        newLocation.y -= game[player].size/moveFactor/Math.sqrt(2);
+    } else if(dir == "DownLeft"){
+        newLocation.y += game[player].size/moveFactor/Math.sqrt(2);
+        newLocation.x -= game[player].size/moveFactor/Math.sqrt(2);
+    } else if(dir == "DownRight"){
+        newLocation.y += game[player].size/moveFactor/Math.sqrt(2);
+        newLocation.x += game[player].size/moveFactor/Math.sqrt(2);
     } else {
         console.log("move error");
     }
@@ -224,9 +237,6 @@ function movePlayer(game, dir, player){
         }
     });
 
-    console.log("player pre move:");
-    console.log(game[player]);
-
     if(canGoThere){ 
         game[player].x = newLocation.x;
         game[player].y = newLocation.y;
@@ -238,9 +248,6 @@ function movePlayer(game, dir, player){
     if(game[player].x < game[player].size){  game[player].x = game[player].size }
     if(game[player].x > (400 - game[player].size)){  game[player].x = (400 - game[player].size) }
 
-
-    console.log("player post move:");
-    console.log(game[player]);
 
 }
 
@@ -303,7 +310,7 @@ function createBullet(game, target, thisPlayer, io){
         color: "#ED0014",
         player: thisPlayer,
         stun: false,
-        speed: 3,                       // this should vary with powerups
+        speed: 2,                       // this should vary with powerups
         damage: 5,                      // this should vary with powerups
         expired: false,
         id: Math.floor(Date.now()*Math.random())

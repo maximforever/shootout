@@ -69,7 +69,7 @@ var shieldCollectMP3 = new Audio('../../assets/shieldCollect.mp3');
 var cashRegisterMP3 = new Audio('../../assets/cash.mp3');
 var whooshMP3 = new Audio('../../assets/whoosh.mp3');
 
-
+var gameID, player;
 
 
 
@@ -78,7 +78,6 @@ $(document).ready(main);
     
 
 function main(){
-
     gameInit();
 
 }
@@ -121,25 +120,22 @@ function gameLoop(){
 function sendMovement(){
     if(currentGame.status == "in progress"){
 
-        if(keypressLeft){
-            console.log("moving player Left");
-            socket.emit("move player", 65) 
+        var direction = null;
+
+        if(keypressLeft){ direction = "Left" }
+        if(keypressRight){ direction = "Right" }
+        if(keypressDown){ direction = "Down" }
+        if(keypressUp){ direction = "Up" } 
+
+        if(keypressLeft && keypressUp){ direction = "UpLeft" }
+        if(keypressLeft && keypressDown){ direction = "DownLeft" }
+        if(keypressRight && keypressUp){ direction = "UpRight" }
+        if(keypressRight && keypressDown){ direction = "DownRight" }
+
+        if(direction != null){
+            socket.emit("move player", direction);
         }
         
-        if(keypressRight){
-            console.log("moving player Right");
-            socket.emit("move player", 83) 
-        }
-        
-        if(keypressDown){
-            console.log("moving player Down");
-            socket.emit("move player", 68) 
-        }
-        
-        if(keypressUp){
-            console.log("moving player Up");
-            socket.emit("move player", 87) 
-        }   
     }
 
 }
@@ -372,9 +368,8 @@ function drawBullets(){
 
 function shoot(){
 
-
-    if(currentGame.status != "in progress" && currentGame[thisPlayer] && currentGame[thisPlayer].bullets > 0){
-
+    if(currentGame.status == "in progress" && currentGame[thisPlayer] && currentGame[thisPlayer].bullets > 0){
+        console.log("shooting");
         zapMP3.currentTime = 0;
         zapMP3.play();
 
@@ -385,6 +380,8 @@ function shoot(){
         }
 
         socket.emit("shoot", shot);
+    } else {
+        console.log("not meeting some requirement");
     }
 }
 
@@ -433,8 +430,8 @@ $("body").on("keydown", function(e){
     // if an arrow key is pressed, send move event
 
     if(e.which == 65) { keypressLeft = true }
-    if(e.which == 68) { keypressDown = true }
-    if(e.which == 83) { keypressRight = true }
+    if(e.which == 68) { keypressRight = true }
+    if(e.which == 83) { keypressDown = true }
     if(e.which == 87) { keypressUp = true }         
 
 
@@ -445,7 +442,17 @@ $("body").on("keydown", function(e){
     if(e.which == 94) {
        socket.emit("activate invisibility");
     }
+});
 
+
+$("body").on("keyup", function(e){
+
+    // if an arrow key is pressed, send move event
+
+    if(e.which == 65) { keypressLeft = false }
+    if(e.which == 68) { keypressRight = false }
+    if(e.which == 83) { keypressDown = false }
+    if(e.which == 87) { keypressUp = false }
 
 });
 
@@ -459,16 +466,6 @@ $("body").on("click", "#activate-invisibility", function(){
 });
 
 
-$("body").on("keyup", function(e){
-
-    // if an arrow key is pressed, send move event
-
-    if(e.which == 65) { keypressLeft = false }
-    if(e.which == 68) { keypressDown = false }
-    if(e.which == 83) { keypressRight = false }
-    if(e.which == 87) { keypressUp = false }
-
-});
 
 
 
