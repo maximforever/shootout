@@ -186,8 +186,6 @@ function movePlayer(game, dir, player){
         moveFactor *= 2;            // double the move factor - slow down by 2       
     }
 
-    console.log("dir is "+ dir)
-
     // figure out where the player will be
     if(dir == "Left"){
         newLocation.x -= game[player].size/moveFactor;

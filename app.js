@@ -171,6 +171,10 @@ MongoClient.connect(dbAddress, function(err, client){
                     thisGame.participants.spectators.push(socket.id);
                 }  
 
+                if(thisGame.incomingPlayer != "p1" && thisGame.incomingPlayer != "p2"){ 
+                    thisGame.incomingPlayer = "spectators";
+                }
+
                 thisPlayer = thisGame.incomingPlayer;
                 thisGame.incomingPlayer = null;          // reset incoming player for the next player
 
@@ -212,8 +216,6 @@ MongoClient.connect(dbAddress, function(err, client){
 
 
                         // get the sound from the queue
-
-                       // console.log(newData.game[thisPlayer]);
 
                         var sound = newData.game[thisPlayer].queuedUpSounds.shift()
 
