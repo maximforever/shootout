@@ -355,7 +355,7 @@ function drawObstacles(){
     if(currentGame.obstacles){
         currentGame.obstacles.forEach(function(obstacle){
             var buildingPattern = ctx.createPattern(building, 'repeat');
-            rect(obstacle.x, obstacle.y, obstacle.width, obstacle.height, "black");//buildingPattern);
+            rect(obstacle.x, obstacle.y, obstacle.width, obstacle.height, buildingPattern);
         })
 
     }
