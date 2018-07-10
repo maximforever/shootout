@@ -98,13 +98,14 @@ function main(){
 function gameInit(){
     console.log("initiating");
     
+    // we want our canvas to be 75% of the screen height
     scaleMultiplier = window.innerHeight / HEIGHT * 0.75;
 
 
     WIDTH = canvas.width *= scaleMultiplier;
     HEIGHT = canvas.height *= scaleMultiplier;
 
-    $(".panel").width(WIDTH);
+    $(".panel, #powerup-timer").width(WIDTH);
 
     socket.emit("update game");
     gameLoop();
@@ -157,6 +158,8 @@ function sendMovement(){
 function drawBoard(game){
 
     drawBackround(game.background);
+    updatePowerupTime();
+    drawObstacles();
     drawShotLine();
     
     
@@ -170,7 +173,7 @@ function drawBoard(game){
         drawPlayer(game.p2) 
     }
 
-    drawObstacles();
+    
     drawBullets();
 
 
@@ -221,20 +224,36 @@ function drawBoard(game){
 }
 
 function drawBackround(color){
-
     rect(-WIDTH, -HEIGHT, WIDTH*3, HEIGHT*3, "black");
     rect(0, 0, WIDTH, HEIGHT, color);      // 
-    //rect(0, 0, WIDTH, HEIGHT, color);
+
 }
+
+function updatePowerupTime(){
+
+    if(currentGame[thisPlayer].invisibilityEndTime > Date.now()){
+        console.log("invisible!");
+        var timeLeft = (currentGame[thisPlayer].invisibilityEndTime - Date.now())/1000;
+        var percentage = timeLeft/10 * 100;
+        if(percentage > 100){ percentage = 100 }
+
+        $("#invisibility-time-left").css("width", percentage + "%");
+    }
+
+    if(currentGame[thisPlayer].stunBulletEndTime > Date.now()){
+        console.log("stunning!");
+        var timeLeft = (currentGame[thisPlayer].stunBulletEndTime - Date.now())/1000;
+        var percentage = timeLeft/10 * 100;
+        if(percentage > 100){ percentage = 100 }
+
+        $("#stun-time-left").css("width", percentage + "%");
+    }
+
+}
+
 
 function drawPlayer(player){
     //console.log(player.player);
-
-
-
-
-
-
 
 
     var image = (player.player == 1) ? p1image : p2image;
@@ -355,7 +374,7 @@ function drawObstacles(){
     if(currentGame.obstacles){
         currentGame.obstacles.forEach(function(obstacle){
             var buildingPattern = ctx.createPattern(building, 'repeat');
-            rect(obstacle.x, obstacle.y, obstacle.width, obstacle.height, buildingPattern);
+            rect(obstacle.x, obstacle.y, obstacle.width, obstacle.height, "black");  // buildingPattern);
         })
 
     }
@@ -716,7 +735,7 @@ function drawBaseType(player){
         console.log(currentGame[player].collecting);
     }
 
-    ctx.drawImage(image, (currentGame[player].base.x + currentGame[player].base.width/2) - 20/2 + offset.x, (currentGame[player].base.y + currentGame[player].base.height/2) - 20/2 + offset.y, 20*scaleMultiplier, 20*scaleMultiplier);
+    ctx.drawImage(image, (currentGame[player].base.x + currentGame[player].base.width/2) - 20*scaleMultiplier/2 + offset.x, (currentGame[player].base.y + currentGame[player].base.height/2) - 20*scaleMultiplier/2 + offset.y, 20*scaleMultiplier, 20*scaleMultiplier);
 
 }
 

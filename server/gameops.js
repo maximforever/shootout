@@ -226,7 +226,11 @@ function movePlayer(game, dir, player){
     var collidingWithObstacles = false;
 
     game.obstacles.forEach(function(obstacle){
-        if(inRectangle(newLocation.x, newLocation.y, obstacle)){
+       /* if(inRectangle(newLocation.x, newLocation.y, obstacle)){
+            canGoThere = false;
+        }*/
+
+        if(playerIsInObstacle(newLocation.x, newLocation.y, game[player].size, obstacle)){
             canGoThere = false;
         }
     });
@@ -474,6 +478,23 @@ function inRectangle(x, y, rect){
 
     return colliding;
 }
+
+
+function playerIsInObstacle(locationX, locationY, playerSize, obstacle){
+
+    var colliding = true;
+
+    if((locationY + playerSize) < obstacle.y)                       { colliding = false }
+    if((locationY - playerSize) > (obstacle.y + obstacle.height))   { colliding = false }
+    if((locationX + playerSize) < obstacle.x)                       { colliding = false }
+    if((locationX - playerSize) > (obstacle.x + obstacle.width))    { colliding = false }
+
+    return colliding;
+
+}
+
+
+
 
 function rectanglesCollide(thisGame, rectangle){
 

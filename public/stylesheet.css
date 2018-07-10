@@ -118,7 +118,7 @@ pre {
 
 .panel-container {
     display: flex;
-    justify-content: space-between;
+    justify-content: space-around;
     align-items: center;
 }
 
@@ -132,6 +132,7 @@ pre {
     display: flex;
     flex-direction: column;
     align-items: center;
+    width: 30%;
 }
 
 .item-price {
@@ -162,13 +163,15 @@ pre {
 }
 
 .buy-button {
-    height: 22px;
-    width: 50px;
-    border: none;
     background: #C8E9EB;
     box-shadow: 0 0 5px #5a5a5a;
     border-radius: 5px;
+    height: 2.5rem;
+    width: 100%;
+    border: none;
+    border-radius: 5px;
     font-size: 0.9rem;
+    border: 1px solid black;
 }
 
 .buy-button:hover:not([disabled]) {
@@ -192,11 +195,32 @@ pre {
     letter-spacing: 5px;
 }
 
+#powerup-timer{
+    height: 2vh;
+    background: #505050;
+    border: 1px solid black;
+    margin: auto; 
+}
+
+#invisibility-time-left{
+    display: block;
+    height: 50%;
+    width: 0%;
+    background: #8ee0ff;
+}
+
+#stun-time-left{
+    display: block;
+    height: 50%;
+    width: 0%;
+    background: #76c767;
+}
+
 /* ready modal */
 
 #ready-modal{
     padding: 20px;
-    border: 1px solid black;
+    border: 4px solid #1b1b1b;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -206,4 +230,5 @@ pre {
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
+    box-shadow: 0 0 5px #696666;
 }
