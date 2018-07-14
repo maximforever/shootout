@@ -48,6 +48,8 @@ mountains.src = "../../assets/patterns/mountains2.png";
 var building = new Image();
 building.src = "../../assets/patterns/building.png";
 
+var ground = new Image();
+ground.src = "../../assets/patterns/ground.png";
 
 
 var p1image = new Image();
@@ -224,8 +226,11 @@ function drawBoard(game){
 }
 
 function drawBackround(color){
+
+    var groundPattern = ctx.createPattern(ground, 'repeat');
+
     rect(-WIDTH, -HEIGHT, WIDTH*3, HEIGHT*3, "black");
-    rect(0, 0, WIDTH, HEIGHT, color);      // 
+    rect(0, 0, WIDTH, HEIGHT, groundPattern); //color);      // 
 
 }
 
@@ -500,11 +505,11 @@ $("body").on("keydown", function(e){
     if(e.which == 87) { keypressUp = true }         
 
 
-    if(e.which == 93) {
+    if(e.which == 49) {                     // 1 key
         socket.emit("activate stun");
     } 
 
-    if(e.which == 94) {
+    if(e.which == 50) {                     // 2 key
        socket.emit("activate invisibility");
     }
 });
@@ -618,6 +623,13 @@ function playPurchaseSound(){
     cashRegisterMP3.currentTime = 0;
     cashRegisterMP3.volume = 0.2;
     cashRegisterMP3.play();
+
+    $("#money-resource").addClass("recently-bought");
+
+    setTimeout(function(){
+        $("#money-resource").removeClass("recently-bought");
+    }, 300);
+
 }
 
 function playInvisibilitySound(){
@@ -726,13 +738,23 @@ function drawBaseType(player){
 
     var image;
 
-    if(currentGame[player].collecting == "health"){
+    if(currentGame[player].collecting == "health" && thisPlayer && player == thisPlayer){
+        $("#health-resource").addClass("active-resource");
+        $("#money-resource").removeClass("active-resource");
+
+        console.log(currentGame[thisPlayer].hp);
+        var healthColor = (currentGame[thisPlayer].hp >= 100) ? "black" : "#065f06";
+        $("#health-resource").css("color", healthColor );
+
         image = healthImage;
-    } else if(currentGame[player].collecting == "money"){
+    } else if(currentGame[player].collecting == "money" && thisPlayer && player == thisPlayer){
+        $("#money-resource").addClass("active-resource");
+        $("#health-resource").removeClass("active-resource");
         image = moneyImage;
     } else {
-        console.log("Currently collecting: ");
-        console.log(currentGame[player].collecting);
+/*        console.log("Currently collecting: ");
+        console.log(currentGame[player].collecting);*/
+        image = moneyImage;
     }
 
     ctx.drawImage(image, (currentGame[player].base.x + currentGame[player].base.width/2) - 20*scaleMultiplier/2 + offset.x, (currentGame[player].base.y + currentGame[player].base.height/2) - 20*scaleMultiplier/2 + offset.y, 20*scaleMultiplier, 20*scaleMultiplier);

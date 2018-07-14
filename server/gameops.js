@@ -21,11 +21,11 @@ var originalGame = {
         hp: 100,
         player: 1,
         bullets: 50,
-        money: 1000,
+        money: 0,
         stun: 0,
         invisibility: 0,
         collecting: "health",
-        moneyRate: 0.1,
+        moneyRate: 0.05,
         healthRate: 0.1,
         ready: false,
         base: {
@@ -48,11 +48,11 @@ var originalGame = {
         hp: 100,
         player: 2,
         bullets: 50,
-        money: 1000,
+        money: 0,
         stun: 0,
         invisibility: 0,
         collecting: "health",
-        moneyRate: 0.1,
+        moneyRate: 0.05,
         healthRate: 0.1,
         ready: false,
         base: {
@@ -217,7 +217,7 @@ function movePlayer(game, dir, player){
     }
 
     //can't go onto the opponent's base
-    if(otherPlayer && inRectangle(newLocation.x, newLocation.y, game[otherPlayer].base)){
+    if(otherPlayer && playerIsInObstacle(newLocation.x, newLocation.y, game[player].size, game[otherPlayer].base)){
         canGoThere = false;
     }
 
@@ -250,30 +250,42 @@ function movePlayer(game, dir, player){
 }
 
 function healPlayer(game, player){
+    if(game.status == "in progress"){
+        thisPlayer = game[player];
 
-    player = game[player];
+        if(thisPlayer /*&& thisPlayer.collecting == "health" */&& inRectangle(thisPlayer.x, thisPlayer.y, thisPlayer.base)){
 
-    if(player && player.collecting == "health" && inRectangle(player.x, player.y, player.base)){
+            thisPlayer.hp += thisPlayer.healthRate;                     // 0.1 = 2 HP/second
 
-        player.hp += player.healthRate;                     // 0.1 = 2 HP/second
+            if(thisPlayer.hp > 100){  thisPlayer.hp = 100 }
 
-        if(player.hp > 100){  player.hp = 100 }
+            if(thisPlayer.player == 1){ thisPlayer.base.color = "#5ce0af" }
+            if(thisPlayer.player == 2){ thisPlayer.base.color = "#f1f7a0" }
 
-        if(player.player == 1){ player.base.color = "#5ce0af" }
-        if(player.player == 2){ player.base.color = "#f1f7a0" }
-   
-    } else {
-        if(player && player.player == 1){ player.base.color = "#6b739f" }
-        if(player && player.player == 2){ player.base.color = "#C900C2" }
+
+            // switch base to heal
+
+            thisPlayer.collecting = "health"
+
+
+       
+        } else {
+            if(thisPlayer && thisPlayer.player == 1){ thisPlayer.base.color = "#6b739f" }
+            if(thisPlayer && thisPlayer.player == 2){ thisPlayer.base.color = "#C900C2" }
+
+            // if off base, switch base to make money
+
+            thisPlayer.collecting = "money"
+        }
     }
-
-
 }
 
 function makeMoney(game, player){
-    player = game[player];
-    if(player && player.collecting == "money"){
-        player.money += player.moneyRate; 
+    if(game.status == "in progress"){
+        player = game[player];
+        if(player && player.collecting == "money"){
+            player.money += player.moneyRate; 
+        }
     }
 }
 
@@ -391,6 +403,10 @@ function checkForObstacleHits(game, bullet){
         if(inRectangle(bullet.x, bullet.y, obstacle)){ bullet.expired = true; }
     });
 
+
+    // if we hit the base, switch from healing to money
+
+/*
     if(bullet.player == "p1" && inRectangle(bullet.x, bullet.y, game.p1.base)){
         console.log(game.p1.collecting);
         game.p1.collecting = (game.p1.collecting == "money") ? "health" : "money";
@@ -402,6 +418,9 @@ function checkForObstacleHits(game, bullet){
         game.p2.collecting = (game.p2.collecting == "money") ? "health" : "money";
         bullet.expired = true;
     }
+
+
+*/
 
 }
 
