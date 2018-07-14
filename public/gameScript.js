@@ -162,8 +162,6 @@ function drawBoard(game){
     drawBackround(game.background);
     updatePowerupTime();
     drawObstacles();
-    drawShotLine();
-    
     
     if(game.participants.p1){ 
         drawBase("p1")
@@ -177,7 +175,7 @@ function drawBoard(game){
 
     
     drawBullets();
-
+    drawShotLine();
 
     if(currentGame.status == "in progress"){
         sendMovement();
@@ -221,6 +219,10 @@ function drawBoard(game){
     if(player && player.stunBulletEndTime > Date.now()){
         $("use-stuns").prop("disabled",true);    
     }
+    
+
+
+
     
 
 }
@@ -316,6 +318,8 @@ function drawPlayer(player){
             // 1.5*player.size ensures the image is ligned up correctly within a circle
                                         
         ctx.drawImage(image, player.x - 1.5*player.size + offset.x , player.y- player.size*2 + offset.y , player.size*3, player.size*3);
+        
+
         player.color = "rgba(255, 255, 255, 0)";
         circle(player.x , player.y , player.size, player.color, true);
         rect(player.x - player.size - 5, player.y - player.size*2, healthBarWidth, healthBarWidth/6, "red", true);
