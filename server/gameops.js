@@ -21,11 +21,11 @@ var originalGame = {
         hp: 100,
         player: 1,
         bullets: 50,
-        money: 0,
+        money: 1000,
         stun: 0,
         invisibility: 0,
         collecting: "health",
-        moneyRate: 0.05,
+        moneyRate: 0.1,
         healthRate: 0.1,
         ready: false,
         base: {
@@ -38,7 +38,8 @@ var originalGame = {
         stunBulletEndTime: 0,
         stunnedEndTime: 0,
         invisibilityEndTime: 0,
-        queuedUpSounds: []
+        queuedUpSounds: [],
+        rotationAngle: 90
     },
     p2: {
         x: 300,
@@ -48,11 +49,11 @@ var originalGame = {
         hp: 100,
         player: 2,
         bullets: 50,
-        money: 0,
+        money: 1000,
         stun: 0,
         invisibility: 0,
         collecting: "health",
-        moneyRate: 0.05,
+        moneyRate: 0.1,
         healthRate: 0.1,
         ready: false,
         base: {
@@ -65,7 +66,8 @@ var originalGame = {
         stunBulletEndTime: 0,
         stunnedEndTime: 0,
         invisibilityEndTime: 0,
-        queuedUpSounds: []
+        queuedUpSounds: [],
+        rotationAngle: 90
     },
     obstacles: [],
     bullets: []
@@ -167,9 +169,12 @@ function setGame(thisGame){
 }
 
 
-function movePlayer(game, dir, player){
+function movePlayer(game, player, dir, angle){
 
     var otherPlayer = (player == "p2") ? "p1" : "p2";
+
+
+    game[player].rotationAngle = angle;
 
     var newLocation = {
         x: game[player].x,

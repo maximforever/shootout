@@ -255,9 +255,9 @@ MongoClient.connect(dbAddress, function(err, client){
                     clearInterval(thisConnection);
                 });
 
-                socket.on("move player", function(dir){
+                socket.on("move player", function(dir, angle){
                     if(thisGame.status == "in progress"){
-                        gameops.movePlayer(thisGame, dir, thisPlayer);
+                        gameops.movePlayer(thisGame, thisPlayer, dir, angle);
                     }
                 });
 

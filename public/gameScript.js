@@ -136,6 +136,20 @@ function gameLoop(){
 function sendMovement(){
     if(currentGame.status == "in progress"){
 
+
+        // 1. calculate rotation angle
+
+        var angleDegrees = 90;
+
+        if(currentGame.status == "in progress"){
+            var relativeMouseX = lastX - currentGame[thisPlayer].x;
+            var relativeMouseY = lastY - currentGame[thisPlayer].y;
+
+            angleDegrees = getAngle(0, 0, relativeMouseX, relativeMouseY);
+        }
+
+        // 2. get movement direction
+
         var direction = null;
 
         if(keypressLeft){ direction = "Left" }
@@ -149,7 +163,7 @@ function sendMovement(){
         if(keypressRight && keypressDown){ direction = "DownRight" }
 
         if(direction != null){
-            socket.emit("move player", direction);
+            socket.emit("move player", direction, angleDegrees);
         }
         
     }
@@ -175,7 +189,7 @@ function drawBoard(game){
 
     
     drawBullets();
-    drawShotLine();
+        drawShotLine();
 
     if(currentGame.status == "in progress"){
         sendMovement();
@@ -223,7 +237,7 @@ function drawBoard(game){
 
 
 
-    
+
 
 }
 
@@ -239,7 +253,6 @@ function drawBackround(color){
 function updatePowerupTime(){
 
     if(currentGame[thisPlayer].invisibilityEndTime > Date.now()){
-        console.log("invisible!");
         var timeLeft = (currentGame[thisPlayer].invisibilityEndTime - Date.now())/1000;
         var percentage = timeLeft/10 * 100;
         if(percentage > 100){ percentage = 100 }
@@ -262,111 +275,69 @@ function updatePowerupTime(){
 function drawPlayer(player){
     //console.log(player.player);
 
-
     var image = (player.player == 1) ? p1image : p2image;
 
-    ctx.save();
+    // pre-calculate some things to rotate the player image
 
-    // move to the center of the canvas
-    //ctx.translate(WIDTH/2,HEIGHT/2);
+    // we need to move from (0, 0) being at the top left of the graph to being in the center.
+    // relative to our player, where is the mouse?
 
-    // rotate the canvas to the specified degrees
-//    ctx.rotate(90*Math.PI/180);
-    
+    var relativeMouseX = lastX - (player.x - offset.x);
+    var relativeMouseY = lastY - (player.y - offset.y);
 
-/*    function getAngle(x1, y1, x2, y2) {
-        var dx = x1 - x2;
-        var dy = y1 - y2;
-        var defaultDegrees = Math.atan2(dy,dx) * 180/Math.PI;
-
-        var shiftedAngle = defaultDegrees + 180 -90;       
-        return shiftedAngle;
-    }
-*/
-
-
-    // var angleDeg = getAngle(player.x, player.y, lastX, lastY);
-    //console.log(angleDeg);
-
-    //ctx.rotate(angleDeg);
-    
-    player.color = "rgba(255, 255, 255, 0)";
+    // if this is the player, base rotation on the mouse. If opponent, get stored rotation
+    var angleDeg = (("p" + player.player) == thisPlayer) ? getAngle(0, 0, relativeMouseX, relativeMouseY) : player.rotationAngle;
 
     // health bar
     var healthBarWidth = player.size*2 + 10;                // those extra 10 px make the players look a little nicer              
     var healthWidth = player.hp/100*healthBarWidth;
 
-    //check that the player is invisible...
+    //check if the player is invisible...
 
     if(player.invisibilityEndTime > Date.now()){
 
-        if(player.player == thisPlayer){       
+        // if this player is the invisible player, draw a circle and a health bar. Otherwise, draw nothing
+        if(("p" +player.player) == thisPlayer){       
 
-            // draw an empty circle            
-            circle(player.x, player.y, player.size, player.color, true);
+            console.log("invisible");
+
+            // draw an empty circle          
+            circle(player.x - offset.x, player.y - offset.y, player.size, "rgba(255, 255, 255, 0)", true);
 
             // draw health bars
             rect(player.x - player.size - 5, player.y - player.size*2, healthBarWidth, healthBarWidth/6, "red", true);
             rect(player.x - player.size - 5, player.y - player.size*2, healthWidth, healthBarWidth/6, "green", false);
-
-        } else {
-            // draw nothing
-            text("Someone is invisible", WIDTH/2, HEIGHT/2, 10*scaleMultiplier, "white", true);
-
-        }
-    } else {
-            // 1.5*player.size ensures the image is ligned up correctly within a circle
-                                        
-        ctx.drawImage(image, player.x - 1.5*player.size + offset.x , player.y- player.size*2 + offset.y , player.size*3, player.size*3);
-        
-
-        player.color = "rgba(255, 255, 255, 0)";
-        circle(player.x , player.y , player.size, player.color, true);
-        rect(player.x - player.size - 5, player.y - player.size*2, healthBarWidth, healthBarWidth/6, "red", true);
-        rect(player.x - player.size - 5, player.y - player.size*2, healthWidth, healthBarWidth/6, "green", false);
-    }
-
-    
-    ctx.restore();
-
-
-    /*
-    if(player.stunnedEndTime > Date.now()){
-        if(player.player == 1){
-            player.color = "#a6f4d0";
         } 
 
-        if(player.player == 2){
-            player.color = "#fcc2fa";
-        }
-    }
-
-    if(player.invisibilityEndTime > Date.now()){
-        player.color = "rgba(255, 255, 255, 0)";
-
-        if(("p" + player.player) == thisPlayer){
-            circle(player.x, player.y, player.size, player.color, true);
-        } else {
-            circle(player.x, player.y, player.size, player.color, false);
-        }
-
-
     } else {
+    
+        // circle is green if the player is stunned or transparent by default
+        player.color = (player.stunnedEndTime > Date.now()) ? "#a6f4d0" : "rgba(255, 255, 255, 0)";
 
-        circle(player.x, player.y, player.size, player.color, false);
+        ctx.save();
 
-        var healthBarWidth = player.size*2 + 10;                // those extra 10 px make the players look a little nicer              
-        var healthWidth = player.hp/100*healthBarWidth;
+        // orient the canvas around the player.once we do this, player coords become 0, 0
+        ctx.translate(player.x - offset.x, player.y - offset.y)
 
-        rect(player.x - player.size - 5, player.y - player.size*2, healthBarWidth, healthBarWidth/6, "red", true);
+        // rotate the canvas to the specified degrees: (angle*Math.PI/180)
+        ctx.rotate((angleDeg + 90 )*Math.PI/180);
+
+        circle(0, 0, player.size, player.color, true);
+
+        // 1.5*player.size ensures the image is ligned up correctly within a circle SINCE the size of the image is 3*player.size                                
+        // 2 on the Y axis because it lines the image up better
+        ctx.drawImage(image, 0 - player.size*1.5, 0 - player.size*2, player.size*3, player.size*3);
         
-        if(player.hp >= 0){
-            rect(player.x - player.size - 5, player.y - player.size*2, healthWidth, healthBarWidth/6, "green", false);
-        }
+        ctx.restore();
+
+
+        // draw health bars
+        rect(player.x - player.size - 5, player.y - player.size*2, healthBarWidth, healthBarWidth/6, "red", true);
+        rect(player.x - player.size - 5, player.y - player.size*2, healthWidth, healthBarWidth/6, "green", false);
+
     }
 
     
-    */
     
 }
 
@@ -746,7 +717,7 @@ function drawBaseType(player){
         $("#health-resource").addClass("active-resource");
         $("#money-resource").removeClass("active-resource");
 
-        console.log(currentGame[thisPlayer].hp);
+//        console.log(currentGame[thisPlayer].hp);
         var healthColor = (currentGame[thisPlayer].hp >= 100) ? "black" : "#065f06";
         $("#health-resource").css("color", healthColor );
 
@@ -798,6 +769,15 @@ function checkForObstacleHits(bullet){
     return hitObstacle;
 }
 
+// formula to get the angle between two points relative to the horizontal axis
+function getAngle(x1, y1, x2, y2) {
+    var dx = x1 - x2;
+    var dy = y1 - y2;
+    var defaultDegrees = Math.atan2(dy,dx) * 180/Math.PI;
+
+    var angle = defaultDegrees + 180; //now up is 90, left is 180, and right is 0
+    return angle;
+}
 
 function scaleGame(game){
     
