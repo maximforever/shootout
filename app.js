@@ -171,6 +171,7 @@ MongoClient.connect(dbAddress, function(err, client){
                 }
 
                 thisPlayer = thisGame.incomingPlayer;
+                otherPlayer = (thisPlayer.player == 1) ? "p2" : "p1";
                 thisGame.incomingPlayer = null;          // reset incoming player for the next player
 
                 // send first update
@@ -211,10 +212,13 @@ MongoClient.connect(dbAddress, function(err, client){
                         gameops.moveBullets(thisGame, thisPlayer);
                         
 
-                        if (updatedGame[otherPlayer] && updatedGame[otherPlayer].hp <= 0){
-                            console.log("GAME OVER!");
+                        if(updatedGame[otherPlayer] && updatedGame[otherPlayer].hp <= 0){
                             updatedGame.status = "gameover";
-                            updatedGame.winner = thisPlayer;
+
+                            if(updatedGame.winner == ""){
+                                updatedGame.winner = thisPlayer;
+                            }
+                            
                             io.emit("gameover", thisPlayer)
                         }
                     }

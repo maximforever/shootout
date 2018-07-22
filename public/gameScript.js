@@ -32,6 +32,8 @@ var offset = {
     y: 0
 }
 
+
+var gameOver = false;
 var offsetOn = false;
 
 
@@ -99,6 +101,10 @@ function main(){
 
 function gameInit(){
     console.log("initiating");
+
+    // we should    only display ready modal if the game hasn't started
+    $("#ready-modal").show();
+
     
     // we want our canvas to be 75% of the screen height
     scaleMultiplier = window.innerHeight / HEIGHT * 0.75;
@@ -285,9 +291,6 @@ function drawPlayer(player){
     var relativeMouseX = lastX - (player.x - offset.x);
     var relativeMouseY = lastY - (player.y - offset.y);
 
-    // if this is the player, base rotation on the mouse. If opponent, get stored rotation
-    var angleDeg = (("p" + player.player) == thisPlayer) ? getAngle(0, 0, relativeMouseX, relativeMouseY) : player.rotationAngle;
-
     // health bar
     var healthBarWidth = player.size*2 + 10;                // those extra 10 px make the players look a little nicer              
     var healthWidth = player.hp/100*healthBarWidth;
@@ -298,8 +301,6 @@ function drawPlayer(player){
 
         // if this player is the invisible player, draw a circle and a health bar. Otherwise, draw nothing
         if(("p" +player.player) == thisPlayer){       
-
-            console.log("invisible");
 
             // draw an empty circle          
             circle(player.x - offset.x, player.y - offset.y, player.size, "rgba(255, 255, 255, 0)", true);
@@ -317,7 +318,10 @@ function drawPlayer(player){
         ctx.save();
 
         // orient the canvas around the player.once we do this, player coords become 0, 0
-        ctx.translate(player.x - offset.x, player.y - offset.y)
+        ctx.translate(player.x + offset.x, player.y + offset.y)
+
+        // if this is the player, base rotation on the mouse. If opponent, get stored rotation
+        var angleDeg = (("p" + player.player) == thisPlayer) ? getAngle(0, 0, relativeMouseX, relativeMouseY) : player.rotationAngle;
 
         // rotate the canvas to the specified degrees: (angle*Math.PI/180)
         ctx.rotate((angleDeg + 90 )*Math.PI/180);
@@ -326,6 +330,8 @@ function drawPlayer(player){
 
         // 1.5*player.size ensures the image is ligned up correctly within a circle SINCE the size of the image is 3*player.size                                
         // 2 on the Y axis because it lines the image up better
+        
+
         ctx.drawImage(image, 0 - player.size*1.5, 0 - player.size*2, player.size*3, player.size*3);
         
         ctx.restore();
@@ -336,6 +342,13 @@ function drawPlayer(player){
         rect(player.x - player.size - 5, player.y - player.size*2, healthWidth, healthBarWidth/6, "green", false);
 
     }
+
+    // draw stun circle
+
+    if((("p" + player.player) == thisPlayer )&& (player.stunnedEndTime > Date.now())){
+        drawStunnedOverlay(player);
+    }
+
 
     
     
@@ -421,6 +434,48 @@ function shoot(){
     }
 }
 
+function drawStunnedOverlay(player) {
+
+    ctx.save();
+    
+    var timeLeft = (player.stunnedEndTime - Date.now())/1000;
+    var percentage = timeLeft/10 * 100;
+
+    ctx.beginPath();
+
+    ctx.globalAlpha = (0.5 - 0.5*(1 - timeLeft/10));
+    var radius = WIDTH/2 * (timeLeft/10);
+/*
+    ctx.beginPath();
+    ctx.rect(0 ,0,WIDTH*3,HEIGHT*3);
+    ctx.closePath();
+
+    ctx.fillStyle = "#a6f4d0";
+    ctx.stroke();
+    ctx.fill();*/
+
+
+
+
+
+    ctx.beginPath();
+    ctx.arc(player.x, player.y, radius, 0, Math.PI*2, false);               // start at 0, end at Math.PI*2
+
+    ctx.shadowBlur = 30;
+    ctx.shadowColor = "#a6f4d0";
+    ctx.closePath();
+    ctx.fillStyle = "#a6f4d0";
+
+    ctx.fill();
+
+
+    ctx.restore();
+
+
+
+
+}
+
 // LISTENERS
 
 $("body").on("click", "#update", function(){
@@ -437,7 +492,7 @@ $("body").on("click", "#offset", function(){
 
 $("body").on("click", "#ready-up", function(){
     socket.emit("ready up");
-   $("#ready-modal").hide(); 
+    $("#ready-modal").hide(); 
 });
 
 
@@ -546,16 +601,10 @@ socket.on('updated game', function(newData, sound){
         offset.y = HEIGHT/2 - currentGame[newData.player].y;
     }
 
-
-/*
-    $("#offset-x").text(offset.x);
-    $("#offset-y").text(offset.y);
-    
-
-*/
-
     currentGame = newData.game;
     thisPlayer = newData.player;
+
+    console.log("got update!");;
 
     // delete this later
     $("#game-json").html(JSON.stringify(currentGame, undefined, 4))
@@ -585,12 +634,16 @@ socket.on('updated game', function(newData, sound){
 
 
 
+
+
+
 socket.on('updated bullet locations', function(updatedBullets){
     currentGame.bullets = updatedBullets;
 });
 
 socket.on('gameover', function(player){
     gameOver = true;
+    $("#play-again-wrapper").show();
 });
 
 
@@ -604,6 +657,7 @@ function playPurchaseSound(){
     setTimeout(function(){
         $("#money-resource").removeClass("recently-bought");
     }, 300);
+
 
 }
 

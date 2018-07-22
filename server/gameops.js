@@ -27,7 +27,6 @@ var originalGame = {
         collecting: "health",
         moneyRate: 0.1,
         healthRate: 0.1,
-        ready: false,
         base: {
             color: "#6B769E",
             width: 40,
@@ -39,7 +38,8 @@ var originalGame = {
         stunnedEndTime: 0,
         invisibilityEndTime: 0,
         queuedUpSounds: [],
-        rotationAngle: 90
+        rotationAngle: 90,
+        ready: false
     },
     p2: {
         x: 300,
@@ -55,7 +55,6 @@ var originalGame = {
         collecting: "health",
         moneyRate: 0.1,
         healthRate: 0.1,
-        ready: false,
         base: {
             color: "#C900C2",
             width: 40,
@@ -67,7 +66,8 @@ var originalGame = {
         stunnedEndTime: 0,
         invisibilityEndTime: 0,
         queuedUpSounds: [],
-        rotationAngle: 90
+        rotationAngle: 90,
+        ready: false
     },
     obstacles: [],
     bullets: []
@@ -184,7 +184,11 @@ function movePlayer(game, player, dir, angle){
     var moveFactor = 2;             // the larger this is, the less the player moves
 
     if(game[player].stunnedEndTime > Date.now()){ 
-        moveFactor *= 2;            // double the move factor - slow down by 2       
+
+
+        var timeLeft = (game[player].stunnedEndTime - Date.now())/1000;
+
+        moveFactor *= 2;                                                    // double the move factor - slow down by 2       
     }
 
     // figure out where the player will be

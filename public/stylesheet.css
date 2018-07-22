@@ -184,15 +184,14 @@ pre {
 }
 
 .powerup-key {
-    align-self: flex-end;
     position: absolute;
     top: 0;
-    right: 0rem;
+    left: 0rem;
     font-size: 0.8rem;
     background: #f1bd7d;
-    padding: 0 0.3rem;
-    border-top-right-radius: 5px;
-    border-bottom-right-radius: 5px;
+    padding: 0 0.5rem;
+    border-top-left-radius: 5px;
+    border-bottom-left-radius: 5px;
     height: 100%;
     display: flex;
     align-items: center;
@@ -267,4 +266,34 @@ pre {
     left: 50%;
     transform: translate(-50%, -50%);
     box-shadow: 0 0 5px #696666;
+
+    display: none;
+}
+
+
+/* play again modal */
+
+#play-again-wrapper {
+    display: none;
+    position: absolute;
+    top: 50vh;
+    left: 50vw;
+    transform: translate(-50%, -50%);
+    padding: 5vw;
+    background: #848484;
+}
+
+#play-again-wrapper button {
+    font-family: 'Open Sans', sans-serif;
+    font-weight: 600;
+    font-size: 2rem;
+    border-radius: 5px;
+    background: #ffe7bc;
+    color: #a70f0f;
+    border: none;
+    padding: 5px 20px;
+}
+
+#play-again-wrapper a:hover button {
+    background: #ffa637;
 }
