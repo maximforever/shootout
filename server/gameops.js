@@ -25,7 +25,7 @@ var originalGame = {
         stun: 0,
         invisibility: 0,
         collecting: "health",
-        moneyRate: 0.1,
+        moneyRate: 0.05,
         healthRate: 0.1,
         base: {
             color: "#6B769E",
@@ -53,7 +53,7 @@ var originalGame = {
         stun: 0,
         invisibility: 0,
         collecting: "health",
-        moneyRate: 0.1,
+        moneyRate: 0.05,
         healthRate: 0.1,
         base: {
             color: "#C900C2",
@@ -188,7 +188,7 @@ function movePlayer(game, player, dir, angle){
 
         var timeLeft = (game[player].stunnedEndTime - Date.now())/1000;
 
-        moveFactor *= 2;                                                    // double the move factor - slow down by 2       
+        moveFactor *= 1.3;                                                    // double the move factor - slow down by 2       
     }
 
     // figure out where the player will be
@@ -330,7 +330,7 @@ function createBullet(game, target, thisPlayer, io){
         player: thisPlayer,
         stun: false,
         speed: 2,                       // this should vary with powerups
-        damage: 5,                      // this should vary with powerups
+        damage: 3,                      // this should vary with powerups
         expired: false,
         id: Math.floor(Date.now()*Math.random())
     }
