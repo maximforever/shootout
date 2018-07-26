@@ -20,8 +20,8 @@ var originalGame = {
         size: 10,
         hp: 100,
         player: 1,
-        bullets: 50,
-        money: 100,
+        bullets: 12,
+        money: 1000,
         stun: 0,
         invisibility: 0,
         collecting: "health",
@@ -50,8 +50,8 @@ var originalGame = {
         size: 10, 
         hp: 100,
         player: 2,
-        bullets: 50,
-        money: 100,
+        bullets: 12,
+        money: 1000,
         stun: 0,
         invisibility: 0,
         collecting: "health",
@@ -459,6 +459,8 @@ function buy(game, player, socket, item){
 
         player.queuedUpSounds.push("purchase");
         game.spectators.queuedUpSounds.push("purchase");
+
+        socket.emit(item + " bought");
 
 
     } else {

@@ -8,8 +8,8 @@ var ctx = canvas.getContext('2d');
 
 var animationSpeed = 20;
 
-var WIDTH = canvas.width;
-var HEIGHT = canvas.height;
+var WIDTH = 400;
+var HEIGHT = 300;
 
 var lastX = lastY = 0;
 
@@ -22,6 +22,9 @@ var keypressUp = false
 
 var scaleMultiplier = 1;
 
+var centerMessage = null;
+var centerAlpha = 1;
+var centerFont = 0;
 
 var currentGame = {
     background: "white"
@@ -109,8 +112,6 @@ function gameInit(){
     
     // we want our canvas to be 75% of the screen height
     scaleMultiplier = window.innerHeight / HEIGHT * 0.75;
-    console.log("scaleMultiplier is now: " + scaleMultiplier);
-
 
     WIDTH = canvas.width *= scaleMultiplier;
     HEIGHT = canvas.height *= scaleMultiplier;
@@ -126,6 +127,12 @@ function gameInit(){
 // main game loop
 
 function gameLoop(){
+
+
+    WIDTH = canvas.width = (400 * scaleMultiplier);
+    HEIGHT = canvas.height = (300 * scaleMultiplier);
+
+    $(".panel, #powerup-timer").width(WIDTH);
 
     clear();
 
@@ -212,6 +219,7 @@ function drawBoard(game){
     drawBackround(game.background);
     updatePowerupTime();
     drawObstacles();
+    drawCenterMessage();
     
     if(game.participants.p1){ 
         drawBase("p1")
@@ -368,11 +376,25 @@ function drawPlayer(player){
 
     // draw stun circle
 
-    if((("p" + player.player) == thisPlayer )&& (player.stunnedEndTime > Date.now())){
-        drawStunnedOverlay(player);
+    if(("p" + player.player) == thisPlayer){
+
+
+        if(player.stunnedEndTime > Date.now()){
+            drawStunnedOverlay(player);
+        }
+
+        if(Number(player.bullets) <= 10 && centerMessage == null && centerMessage){
+            
+            centerMessage = player.bullets;
+            centerFont = 60;
+            centerAlpha = 0.6;
+
+        }
+
+        
     }
 
-
+    
     
     
 }
@@ -436,6 +458,29 @@ function drawBullets(){
             
         });
     } 
+
+}
+
+function drawCenterMessage(){
+
+
+    if(centerMessage != null && (centerMessage.toString().length > 0) && centerAlpha > 0.1){
+
+        ctx.globalAlpha = centerAlpha;
+        text(centerMessage, WIDTH/2, (HEIGHT/2 + centerFont*scaleMultiplier/3), centerFont*scaleMultiplier, "red", true);
+        ctx.globalAlpha = 1;
+
+
+        centerAlpha -= 0.02;
+        centerFont *= 1.15;
+
+    } else {
+        centerMessage = null;
+        centerAlpha = 1;
+        centerFont = 0;
+    }
+    
+
 
 }
 
@@ -559,14 +604,26 @@ function movePlayer(game, player){
 
 $( window ).resize(function() {
     // we want our canvas to be 75% of the screen height
-    scaleMultiplier = window.innerHeight / HEIGHT * 0.75;
-    console.log("scaleMultiplier is now: " + scaleMultiplier);
+    
+    if(window.innerHeight > (300/0.75)){                    // we want the canvas to be at LEAST 300px tall
 
 
-    WIDTH = canvas.width *= scaleMultiplier;
-    HEIGHT = canvas.height *= scaleMultiplier;
+        scaleMultiplier = 1/scaleMultiplier;
+        scaleGame(currentGame);
 
-    $(".panel, #powerup-timer").width(WIDTH);
+        scaleMultiplier = window.innerHeight / 300 * 0.75;
+
+        scaleGame(currentGame);
+        
+        if(currentGame != null && typeof(currentGame) != "undefined" && currentGame.background != "white") { 
+            drawBoard(currentGame)
+
+        }
+    }
+    
+    
+    //console.log("scaleMultiplier is now: " + scaleMultiplier);
+
 });
 
 $("body").on("click", "#update", function(){
@@ -632,6 +689,18 @@ $("body").on("keydown", function(e){
 
     if(e.which == 50) {                     // 2 key
        socket.emit("activate invisibility");
+    }
+
+    if(e.which == 69) {                     // E key
+       socket.emit("buy bullets");
+    }
+
+    if(e.which == 82) {                     // R key
+       socket.emit("buy stun");
+    }
+
+    if(e.which == 84) {                     // T key
+       socket.emit("buy invisibility");
     }
 
     sendMovement();
@@ -729,7 +798,38 @@ socket.on('updated game', function(newData, sound){
 });
 
 
+// purchase confirmation
 
+socket.on('stun bought', function(updatedBullets){
+    
+    $("#buy-stuns").addClass("recently-bought").css("background", "#fde7bc");
+
+    setTimeout(function(){
+        $("#buy-stuns").removeClass("recently-bought").css("background", "#C8E9EB");;
+
+    }, 300);
+});
+
+socket.on('bullets bought', function(updatedBullets){
+    currentGame.bullets = updatedBullets;
+
+    $("#buy-bullets").addClass("recently-bought").css("background", "#fde7bc");
+
+    setTimeout(function(){
+        $("#buy-bullets").removeClass("recently-bought").css("background", "#C8E9EB");;
+    }, 300);
+});
+
+socket.on('invisibility bought', function(updatedBullets){
+    currentGame.bullets = updatedBullets;
+
+    $("#buy-invisibility").addClass("recently-bought").css("background", "#fde7bc");
+
+    setTimeout(function(){
+        $("#buy-invisibility").removeClass("recently-bought").css("background", "#C8E9EB");;
+
+    }, 300);
+});
 
 
 
@@ -930,22 +1030,29 @@ function getAngle(x1, y1, x2, y2) {
 }
 
 function scaleGame(game){
-    
-    game.p1.x *= scaleMultiplier;
-    game.p1.y *= scaleMultiplier;
-    game.p1.size *= scaleMultiplier;
-    game.p1.base.x *= scaleMultiplier;
-    game.p1.base.y *= scaleMultiplier;
-    game.p1.base.width *= scaleMultiplier;
-    game.p1.base.height *= scaleMultiplier;
 
-    game.p2.x *= scaleMultiplier;
-    game.p2.y *= scaleMultiplier;
-    game.p2.size *= scaleMultiplier;
-    game.p2.base.x *= scaleMultiplier;
-    game.p2.base.y *= scaleMultiplier;
-    game.p2.base.width *= scaleMultiplier;
-    game.p2.base.height *= scaleMultiplier;
+    //console.log("scaling at " + scaleMultiplier);
+    
+    if(game.p1){
+        game.p1.x *= scaleMultiplier;
+        game.p1.y *= scaleMultiplier;
+        game.p1.size *= scaleMultiplier;
+        game.p1.base.x *= scaleMultiplier;
+        game.p1.base.y *= scaleMultiplier;
+        game.p1.base.width *= scaleMultiplier;
+        game.p1.base.height *= scaleMultiplier;
+    }
+    
+    if(game.p2){
+        game.p2.x *= scaleMultiplier;
+        game.p2.y *= scaleMultiplier;
+        game.p2.size *= scaleMultiplier;
+        game.p2.base.x *= scaleMultiplier;
+        game.p2.base.y *= scaleMultiplier;
+        game.p2.base.width *= scaleMultiplier;
+        game.p2.base.height *= scaleMultiplier;
+    }
+    
 
 
     game.obstacles.forEach(function(obstacle){

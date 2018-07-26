@@ -187,14 +187,15 @@ pre {
     position: absolute;
     top: 0;
     left: 0rem;
-    font-size: 0.8rem;
-    background: #f1bd7d;
+    font-size: 1rem;
+    background: #4c4c4c;
     padding: 0 0.5rem;
     border-top-left-radius: 5px;
     border-bottom-left-radius: 5px;
     height: 100%;
     display: flex;
     align-items: center;
+    color: white;
 }
 
 .buy-button {
@@ -207,6 +208,7 @@ pre {
     border-radius: 5px;
     font-size: 0.9rem;
     border: 1px solid black;
+    position: relative;
 }
 
 .buy-button:hover:not([disabled]) {
