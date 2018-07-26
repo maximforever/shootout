@@ -35,6 +35,7 @@ var offset = {
 
 var gameOver = false;
 var offsetOn = false;
+var lastDirection = null;         // keep track of last key pressed
 
 
 // load up images for canvas 
@@ -108,6 +109,7 @@ function gameInit(){
     
     // we want our canvas to be 75% of the screen height
     scaleMultiplier = window.innerHeight / HEIGHT * 0.75;
+    console.log("scaleMultiplier is now: " + scaleMultiplier);
 
 
     WIDTH = canvas.width *= scaleMultiplier;
@@ -128,7 +130,14 @@ function gameLoop(){
     clear();
 
     if(currentGame != null && typeof(currentGame) != "undefined" && currentGame.background != "white") { 
+        
+        if(currentGame.status && currentGame.status == "in progress"){
+            // move player on the front end , then correct w/back-end info
+            movePlayer(currentGame, thisPlayer)
+        }
+
         drawBoard(currentGame);
+
     } 
 
     if(currentGame.status == "gameover"){
@@ -141,7 +150,6 @@ function gameLoop(){
 
 function sendMovement(){
     if(currentGame.status == "in progress"){
-
 
         // 1. calculate rotation angle
 
@@ -158,17 +166,39 @@ function sendMovement(){
 
         var direction = null;
 
-        if(keypressLeft){ direction = "Left" }
-        if(keypressRight){ direction = "Right" }
-        if(keypressDown){ direction = "Down" }
-        if(keypressUp){ direction = "Up" } 
+        if(keypressLeft){ 
+            direction = "Left" 
+        }
+        if(keypressRight){ 
+            direction = "Right" 
+        }
+        if(keypressDown){ 
+            direction = "Down" 
+        }
+        if(keypressUp){ 
+            direction = "Up" 
+        } 
 
-        if(keypressLeft && keypressUp){ direction = "UpLeft" }
-        if(keypressLeft && keypressDown){ direction = "DownLeft" }
-        if(keypressRight && keypressUp){ direction = "UpRight" }
-        if(keypressRight && keypressDown){ direction = "DownRight" }
+        if(keypressLeft && keypressUp){ 
+            direction = "UpLeft" 
+        }
+        if(keypressLeft && keypressDown){ 
+            direction = "DownLeft" 
+        }
+        if(keypressRight && keypressUp){ 
+            direction = "UpRight" 
+        }
+        if(keypressRight && keypressDown){ 
+            direction = "DownRight" 
+        }
 
-        if(direction != null){
+        if(!keypressUp && !keypressDown && !keypressRight && !keypressLeft){ direction = "STOP" }
+
+
+
+        if(direction != null && direction != lastDirection){
+            lastDirection = direction;
+            //console.log("Sending movement:" + direction);
             socket.emit("move player", direction, angleDegrees);
         }
         
@@ -195,14 +225,12 @@ function drawBoard(game){
 
     
     drawBullets();
-        drawShotLine();
+        
+    // drawShotLine();
 
-    if(currentGame.status == "in progress"){
+/*    if(currentGame.status == "in progress"){
         sendMovement();
-    }
-    
-
-
+    }*/
 
     var player = game[thisPlayer];
 
@@ -239,11 +267,6 @@ function drawBoard(game){
     if(player && player.stunBulletEndTime > Date.now()){
         $("use-stuns").prop("disabled",true);    
     }
-    
-
-
-
-
 
 }
 
@@ -476,7 +499,75 @@ function drawStunnedOverlay(player) {
 
 }
 
+
+
+
+function movePlayer(game, player){
+
+    var otherPlayer = (("p" + player.player) == "p2") ? "p1" : "p2";
+
+    var newLocation = {
+        x: player.x,
+        y: player.y
+    };
+
+    var moveFactor = 2;             // the larger this is, the less the player moves
+
+    if(player.stunnedEndTime > Date.now()){ 
+        var timeLeft = (player.stunnedEndTime - Date.now())/1000;
+        moveFactor *= 1.3;                                                    // double the move factor - slow down by 2       
+    }
+
+    // figure out where the player will be
+    if(lastDirection == "Left"){
+        newLocation.x -= player.size/moveFactor;
+    } else if(lastDirection == "Right"){
+        newLocation.x += player.size/moveFactor;
+    } else if(lastDirection == "Down"){
+        newLocation.y += player.size/moveFactor;
+    } else if(lastDirection == "Up"){
+        newLocation.y -= player.size/moveFactor;
+    } else if(lastDirection == "UpLeft"){
+        newLocation.x -= player.size/moveFactor/Math.sqrt(2);      // we divide by Math.sqrt(2) so that diagonal moves still only move by 1 unit (not faster than Up/Right/Down/Left)
+        newLocation.y -= player.size/moveFactor/Math.sqrt(2);
+    } else if(lastDirection == "UpRight"){
+        newLocation.x += player.size/moveFactor/Math.sqrt(2);
+        newLocation.y -= player.size/moveFactor/Math.sqrt(2);
+    } else if(lastDirection == "DownLeft"){
+        newLocation.y += player.size/moveFactor/Math.sqrt(2);
+        newLocation.x -= player.size/moveFactor/Math.sqrt(2);
+    } else if(lastDirection == "DownRight"){
+        newLocation.y += player.size/moveFactor/Math.sqrt(2);
+        newLocation.x += player.size/moveFactor/Math.sqrt(2);
+    } 
+
+    player.x = newLocation.x;
+    player.y = newLocation.y;
+
+
+    // don't let the player go off the map
+    if(player.y < player.size){  player.y = player.size  }
+    if(player.y > (300 - player.size)){  player.y = (300 - player.size) }
+    if(player.x < player.size){  player.x = player.size }
+    if(player.x > (400 - player.size)){  player.x = (400 - player.size) }
+
+
+}
+
+
 // LISTENERS
+
+$( window ).resize(function() {
+    // we want our canvas to be 75% of the screen height
+    scaleMultiplier = window.innerHeight / HEIGHT * 0.75;
+    console.log("scaleMultiplier is now: " + scaleMultiplier);
+
+
+    WIDTH = canvas.width *= scaleMultiplier;
+    HEIGHT = canvas.height *= scaleMultiplier;
+
+    $(".panel, #powerup-timer").width(WIDTH);
+});
 
 $("body").on("click", "#update", function(){
     socket.emit("update game");
@@ -542,6 +633,9 @@ $("body").on("keydown", function(e){
     if(e.which == 50) {                     // 2 key
        socket.emit("activate invisibility");
     }
+
+    sendMovement();
+
 });
 
 
@@ -553,6 +647,8 @@ $("body").on("keyup", function(e){
     if(e.which == 68) { keypressRight = false }
     if(e.which == 83) { keypressDown = false }
     if(e.which == 87) { keypressUp = false }
+
+    sendMovement();
 
 });
 
@@ -604,7 +700,7 @@ socket.on('updated game', function(newData, sound){
     currentGame = newData.game;
     thisPlayer = newData.player;
 
-    console.log("got update!");;
+    //console.log("got update!");;
 
     // delete this later
     $("#game-json").html(JSON.stringify(currentGame, undefined, 4))
@@ -868,4 +964,3 @@ function scaleGame(game){
 
 
 }
-

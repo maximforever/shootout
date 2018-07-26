@@ -207,9 +207,12 @@ MongoClient.connect(dbAddress, function(err, client){
 
                         socket.emit("updated game", newData, sound)
 
+
+                        gameops.movePlayer(thisGame, thisPlayer);
                         gameops.healPlayer(thisGame, thisPlayer);
                         gameops.makeMoney(thisGame, thisPlayer);
                         gameops.moveBullets(thisGame, thisPlayer);
+
                         
 
                         if(updatedGame[otherPlayer] && updatedGame[otherPlayer].hp <= 0){
@@ -261,7 +264,7 @@ MongoClient.connect(dbAddress, function(err, client){
 
                 socket.on("move player", function(dir, angle){
                     if(thisGame.status == "in progress"){
-                        gameops.movePlayer(thisGame, thisPlayer, dir, angle);
+                        gameops.setMoveDirection(thisGame, thisPlayer, dir, angle);
                     }
                 });
 

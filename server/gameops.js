@@ -31,9 +31,11 @@ var originalGame = {
             color: "#6B769E",
             width: 40,
             height: 30,
+            healthLeft: 100,
             x: 0,
             y: 0
         },
+        moving: null,
         stunBulletEndTime: 0,
         stunnedEndTime: 0,
         invisibilityEndTime: 0,
@@ -59,9 +61,11 @@ var originalGame = {
             color: "#C900C2",
             width: 40,
             height: 30,
+            healthLeft: 100,
             x: 360,             
             y: 270          
         },
+        moving: null,
         stunBulletEndTime: 0,
         stunnedEndTime: 0,
         invisibilityEndTime: 0,
@@ -169,12 +173,22 @@ function setGame(thisGame){
 }
 
 
-function movePlayer(game, player, dir, angle){
+function setMoveDirection(game, player, dir, angle){
+
+    console.log("SETTING DIRECTION FOR " + player); 
 
     var otherPlayer = (player == "p2") ? "p1" : "p2";
 
-
     game[player].rotationAngle = angle;
+    game[player].moving = dir;
+
+}
+
+
+
+function movePlayer(game, player){
+
+    var otherPlayer = (player == "p2") ? "p1" : "p2";
 
     var newLocation = {
         x: game[player].x,
@@ -192,30 +206,27 @@ function movePlayer(game, player, dir, angle){
     }
 
     // figure out where the player will be
-    if(dir == "Left"){
+    if(game[player].moving == "Left"){
         newLocation.x -= game[player].size/moveFactor;
-    } else if(dir == "Right"){
+    } else if(game[player].moving == "Right"){
         newLocation.x += game[player].size/moveFactor;
-    } else if(dir == "Down"){
+    } else if(game[player].moving == "Down"){
         newLocation.y += game[player].size/moveFactor;
-    } else if(dir == "Up"){
+    } else if(game[player].moving == "Up"){
         newLocation.y -= game[player].size/moveFactor;
-    } else if(dir == "UpLeft"){
+    } else if(game[player].moving == "UpLeft"){
         newLocation.x -= game[player].size/moveFactor/Math.sqrt(2);      // we divide by Math.sqrt(2) so that diagonal moves still only move by 1 unit (not faster than Up/Right/Down/Left)
         newLocation.y -= game[player].size/moveFactor/Math.sqrt(2);
-    } else if(dir == "UpRight"){
+    } else if(game[player].moving == "UpRight"){
         newLocation.x += game[player].size/moveFactor/Math.sqrt(2);
         newLocation.y -= game[player].size/moveFactor/Math.sqrt(2);
-    } else if(dir == "DownLeft"){
+    } else if(game[player].moving == "DownLeft"){
         newLocation.y += game[player].size/moveFactor/Math.sqrt(2);
         newLocation.x -= game[player].size/moveFactor/Math.sqrt(2);
-    } else if(dir == "DownRight"){
+    } else if(game[player].moving == "DownRight"){
         newLocation.y += game[player].size/moveFactor/Math.sqrt(2);
         newLocation.x += game[player].size/moveFactor/Math.sqrt(2);
-    } else {
-        console.log("move error");
-    }
-
+    } 
 
     var canGoThere = true;
 
@@ -235,10 +246,6 @@ function movePlayer(game, player, dir, angle){
     var collidingWithObstacles = false;
 
     game.obstacles.forEach(function(obstacle){
-       /* if(inRectangle(newLocation.x, newLocation.y, obstacle)){
-            canGoThere = false;
-        }*/
-
         if(playerIsInObstacle(newLocation.x, newLocation.y, game[player].size, obstacle)){
             canGoThere = false;
         }
@@ -549,6 +556,7 @@ function randBetween(min, max){
 }
 
 module.exports.createNewGame = createNewGame;
+module.exports.setMoveDirection = setMoveDirection;
 module.exports.movePlayer = movePlayer;
 module.exports.createBullet = createBullet;
 module.exports.moveBullets = moveBullets;
