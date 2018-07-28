@@ -234,6 +234,12 @@ pre {
     color: #e89128;
 }
 
+.not-enough-money {
+    background: #b1405a;
+    color: #f5bdca;
+}
+
+
 .one-item {
     display: flex;
     flex-direction: column;

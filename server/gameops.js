@@ -195,7 +195,7 @@ function movePlayer(game, player){
         y: game[player].y
     };
 
-    var moveFactor = 2;             // the larger this is, the less the player moves
+    var moveFactor = 3;             // the larger this is, the less the player moves
 
     if(game[player].stunnedEndTime > Date.now()){ 
 
@@ -465,6 +465,7 @@ function buy(game, player, socket, item){
 
     } else {
         console.log("not enough money");
+        player.queuedUpSounds.push("buzz");
     }
 
 }

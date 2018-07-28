@@ -86,6 +86,8 @@ var shieldCollectMP3 = new Audio('../../assets/shieldCollect.mp3');
 var cashRegisterMP3 = new Audio('../../assets/cash.mp3');
 var whooshMP3 = new Audio('../../assets/whoosh.mp3');
 
+var buzzMP3 = new Audio('../../assets/buzz.mp3');
+
 var soundtrackMP3 = new Audio('../../assets/soundtrack.mp3');
 
 
@@ -397,7 +399,7 @@ function drawPlayer(player){
             //console.log("LOW ON BULLETS!");
 
             centerMessage = player.bullets + " bullets left";
-            centerFont = 60;
+            centerFont = 50;
             centerAlpha = 0.6;
 
         }
@@ -567,7 +569,7 @@ function movePlayer(game, player){
         y: player.y
     };
 
-    var moveFactor = 2;             // the larger this is, the less the player moves
+    var moveFactor = 3;             // the larger this is, the less the player moves
 
     if(player.stunnedEndTime > Date.now()){ 
         var timeLeft = (player.stunnedEndTime - Date.now())/1000;
@@ -800,6 +802,9 @@ socket.on('updated game', function(newData, sound){
             case "useStun":
                 playUseStunSound();
                 break;
+            case "buzz"
+                playBuzzer();
+                break;
             default:
                 break;
         }
@@ -864,8 +869,18 @@ function playPurchaseSound(){
     setTimeout(function(){
         $("#money-resource").removeClass("recently-bought");
     }, 300);
+}
 
+function playBuzzer(){
+    buzzerMP3.currentTime = 0;
+    buzzerMP3.volume = 0.2;
+    buzzerMP3.play();
 
+    $("#money-resource").addClass("not-enough-money");
+
+    setTimeout(function(){
+        $("#money-resource").removeClass("not-enough-money");
+    }, 300);
 }
 
 function playInvisibilitySound(){
