@@ -25,6 +25,10 @@ button:disabled {
     color: #393939;
 }
 
+button:hover {
+    cursor: pointer;    
+}
+
 pre {
     text-align: left;
 }
@@ -40,10 +44,23 @@ pre {
 #homepage {
     text-align: center;
     padding: 10vh 10vw;
+    background: #273748;
 }
 
-#homepage a {
+#gamepage {
+    background: #273748;
+}
+
+#homepage a, #homepage a:visited, #homepage a:active {
     text-decoration: none;
+}
+
+#homepage a:hover {
+    color: #faff6e;
+}
+
+.logo {
+    color: #d6d6d6;
 }
 
 .game-button {
@@ -56,15 +73,42 @@ pre {
     margin: 10px;
 }
 
+.clear-games {
+    font-size: 1.5rem;
+    font-weight: 600;
+    justify-content: center;
+    background: #a01717;
+    line-height: 1;
+    color: #d6d6d6;
+}
 
-#homepage .game-button:hover{
-    background: #606161;
-    color: white;
+.clear-games:hover {
+    background: #6f2424;
+    color: #d6d6d6;
+}
+
+.player-circle:hover{
+    background: #632467;
+    color: #d6d6d6;
+}
+
+.player-circle-link {
+    display: flex;
+    color: black;
 }
 
 #new-game {
-    background: orange;w
+    background: #8f1b96;
+    color: white;
+    font-weight: 400;
 }
+
+#new-game:hover {
+    background: #632467;
+    color: #d6d6d6;
+}
+
+
 
 .game-button-container {
     display: flex;
@@ -99,11 +143,16 @@ pre {
 
 .player-circle {
     display: inline-block;
-    border-radius: 100%;
-    height: 3vh;
-    width: 3vh;
     border: 1px solid black;
     margin: 0 5px;
+    font-weight: 400;
+    font-size: 1rem;
+    padding: 5px;
+    border-radius: 5px;
+}
+
+.player-circle-container {
+    display: flex;
 }
 
 .filled{
@@ -113,19 +162,56 @@ pre {
 
 /* game */
 
+
+
+
+/* layout */
+
+.screen-wrapper {
+    display: flex;
+    justify-content: center;
+}
+
+.left-screen-column {
+    display: flex;
+    flex-direction: column;
+}
+
+.right-screen-column {
+    display: flex;
+    flex-direction: column;
+}
+
+
 .panel {
     width: 400px;
-    margin: 0px auto 10px auto;
+    margin: 0px auto;
     background: #a2a2a2;
     box-sizing: border-box;
     display: flex;
     flex-direction: column;
+    width: 100%;
+    
 }
 
 .panel-container {
     display: flex;
     justify-content: space-around;
     align-items: center;
+}
+
+
+ #shop{ 
+    width: 100%;
+    flex-grow: 1;
+    padding: 20px; 
+}
+
+
+
+#shop .panel-container {
+    padding: 10px 0px;
+    flex-direction: column;
 }
 
 
@@ -203,7 +289,7 @@ pre {
     box-shadow: 0 0 5px #5a5a5a;
     border-radius: 5px;
     height: 2.5rem;
-    width: 100%;
+    width: 7rem;
     border: none;
     border-radius: 5px;
     font-size: 0.9rem;
@@ -237,6 +323,7 @@ pre {
     background: #505050;
     border: 1px solid black;
     margin: auto; 
+    width: 100%;
 }
 
 #invisibility-time-left{

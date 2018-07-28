@@ -118,13 +118,23 @@ MongoClient.connect(dbAddress, function(err, client){
 
                 // figure out if this is P1, P2, or a spectator
 
-                if(req.params.player == "1"){
-                    incomingPlayer = "p1";
-                } else if (req.params.player == "2"){
-                    incomingPlayer = "p2";
+                if(req.params.player == "player"){
+                    
+
+                    // incoming player is 1 if empty, 2 if empty, or spectator
+
+                    if(thisGame.participants.p1 == null || thisGame.participants.p1.length == 0){
+                        incomingPlayer = "p1";
+                    } else if(thisGame.participants.p2 == null || thisGame.participants.p1.length == 0){
+                        incomingPlayer = "p2";
+                    } else {
+                        incomingPlayer = "spectator"
+                    }
+
                 } else {
                     incomingPlayer = "spectator";
                 }
+
 
                 thisGame.incomingPlayer = incomingPlayer;
               

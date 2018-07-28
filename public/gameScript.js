@@ -48,15 +48,15 @@ healthImage.src = "../../assets/icons/health.png";
 var moneyImage = new Image();
 moneyImage.src = "../../assets/icons/money.png";
 
-var mountains = new Image();
-mountains.src = "../../assets/patterns/mountains2.png";
-
 var building = new Image();
 building.src = "../../assets/patterns/building.png";
 
-var ground = new Image();
-ground.src = "../../assets/patterns/ground.png";
+var circuit = new Image();
+circuit.src = "../../assets/patterns/circuit.png";
 
+var ground = new Image();
+ground.src = "../../assets/patterns/background2.png";
+//ground.height = canvas.height;
 
 var p1image = new Image();
 p1image.src = "../../assets/icons/bluePlayer.png";
@@ -86,7 +86,7 @@ var shieldCollectMP3 = new Audio('../../assets/shieldCollect.mp3');
 var cashRegisterMP3 = new Audio('../../assets/cash.mp3');
 var whooshMP3 = new Audio('../../assets/whoosh.mp3');
 
-var soundtrackMP3 = new Audio('../../assets/soundtrackMIDI.mp3');
+var soundtrackMP3 = new Audio('../../assets/soundtrack.mp3');
 
 
 
@@ -106,8 +106,12 @@ function main(){
 function gameInit(){
     console.log("initiating");
 
-    // we should    only display ready modal if the game hasn't started
-    $("#ready-modal").show();
+    // we should    only display ready modal if the game hasn't started && NOT spectator
+
+    if(window.location.pathname.indexOf("/player") !== -1){
+        $("#ready-modal").show();
+    }
+    
 
     
     // we want our canvas to be 75% of the screen height
@@ -116,7 +120,7 @@ function gameInit(){
     WIDTH = canvas.width *= scaleMultiplier;
     HEIGHT = canvas.height *= scaleMultiplier;
 
-    $(".panel, #powerup-timer").width(WIDTH);
+    //$(".panel, #powerup-timer").width(WIDTH);
 
     socket.emit("update game");
     gameLoop();
@@ -132,7 +136,7 @@ function gameLoop(){
     WIDTH = canvas.width = (400 * scaleMultiplier);
     HEIGHT = canvas.height = (300 * scaleMultiplier);
 
-    $(".panel, #powerup-timer").width(WIDTH);
+    //$(".panel, #powerup-timer").width(WIDTH);
 
     clear();
 
@@ -280,10 +284,13 @@ function drawBoard(game){
 
 function drawBackround(color){
 
-    var groundPattern = ctx.createPattern(ground, 'repeat');
+
+
+    //var groundPattern = ctx.createPattern(ground, 'repeat');
 
     rect(-WIDTH, -HEIGHT, WIDTH*3, HEIGHT*3, "black");
-    rect(0, 0, WIDTH, HEIGHT, groundPattern); //color);      // 
+    ctx.drawImage(ground, 0 + offset.x, 0 + offset.y, canvas.width, canvas.height);
+    // rect(0, 0, WIDTH, HEIGHT, groundPattern); //color);      // 
 
 }
 
@@ -383,8 +390,12 @@ function drawPlayer(player){
             drawStunnedOverlay(player);
         }
 
-        if(Number(player.bullets) <= 10 && centerMessage == null && centerMessage){
+         // draw bullet text
+
+        if(Number(player.bullets) <= 10 /*&& centerMessage == null && centerMessage*/){
             
+            //console.log("LOW ON BULLETS!");
+
             centerMessage = player.bullets;
             centerFont = 60;
             centerAlpha = 0.6;
@@ -411,8 +422,8 @@ function drawObstacles(){
 
     if(currentGame.obstacles){
         currentGame.obstacles.forEach(function(obstacle){
-            var buildingPattern = ctx.createPattern(building, 'repeat');
-            rect(obstacle.x, obstacle.y, obstacle.width, obstacle.height, "black");  // buildingPattern);
+            var circuitPattern = ctx.createPattern(circuit, 'repeat');
+            rect(obstacle.x, obstacle.y, obstacle.width, obstacle.height, circuitPattern);
         })
 
     }
@@ -699,7 +710,7 @@ $("body").on("keydown", function(e){
        socket.emit("buy stun");
     }
 
-    if(e.which == 84) {                     // T key
+    if(e.which == 70) {                     // F key
        socket.emit("buy invisibility");
     }
 
@@ -748,7 +759,7 @@ socket.on('start game', function(){
 
     soundtrackMP3.currentTime = 0;
     soundtrackMP3.volume = 0.2;
-    // soundtrackMP3.play();
+    soundtrackMP3.play();
 
 });
 
@@ -963,7 +974,7 @@ function drawBaseType(player){
 
     var image;
 
-    if(currentGame[player].collecting == "health" && thisPlayer && player == thisPlayer){
+    if(currentGame[player].collecting == "health"){
         $("#health-resource").addClass("active-resource");
         $("#money-resource").removeClass("active-resource");
 
@@ -972,7 +983,7 @@ function drawBaseType(player){
         $("#health-resource").css("color", healthColor );
 
         image = healthImage;
-    } else if(currentGame[player].collecting == "money" && thisPlayer && player == thisPlayer){
+    } else if(currentGame[player].collecting == "money"){
         $("#money-resource").addClass("active-resource");
         $("#health-resource").removeClass("active-resource");
         image = moneyImage;
@@ -1054,13 +1065,15 @@ function scaleGame(game){
     }
     
 
+    if(game.obstacles){
+        game.obstacles.forEach(function(obstacle){
+            obstacle.x *= scaleMultiplier;
+            obstacle.y *= scaleMultiplier;
+            obstacle.width *= scaleMultiplier;
+            obstacle.height *= scaleMultiplier;
+        });
+    }
 
-    game.obstacles.forEach(function(obstacle){
-        obstacle.x *= scaleMultiplier;
-        obstacle.y *= scaleMultiplier;
-        obstacle.width *= scaleMultiplier;
-        obstacle.height *= scaleMultiplier;
-    });
 
     game.bullets.forEach(function(bullet){
         bullet.x *= scaleMultiplier;

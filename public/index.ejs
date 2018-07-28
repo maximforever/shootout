@@ -18,8 +18,7 @@
     </HEAD>
 
     <BODY id = "homepage">
-        <a href = "/clear"><button>clear</button></a>
-        <h1><a href = "/">Shootout!</a></h1>
+        <h1><a class = "logo" href = "/">Shootout!</a></h1>
 
 
         <button class = "game-button" id = "new-game" onclick="location.href='/new-game'">New Game</button>
@@ -31,24 +30,43 @@
 
             <% var game = games[key] %>
 
-            <a href = "<%= 'game/' +  game.id  + '/1'%>">
+            
                 <button class = "game-button" id = "<%= game.id %>">
                     <div class = "game-button-container">
-                        <div class = "game-info-name"><%= game.id %></div>
-                        <div class = "game-info-players">
-                            <% var p1class = (game.participants.p1) ? "filled" : "empty" %>
-                            <% var p2class = (game.participants.p2) ? "filled" : "empty" %>
 
-                            <div class = "player-circle-container"><p>p1</p><span class = "player-circle <%= p1class %>"></span></div>
-                            <div class = "player-circle-container"><p>p2</p><span class = "player-circle <%= p2class %>"></span></div>
+
+                        <div class = "game-info-name">Game <%= game.id.toString().substr(game.id.toString().length - 5, 4) %></div>
+                        <div class = "game-info-players">
+                            
+
+
+                            <div class = "player-circle-container">
+                                <a class = "player-circle-link"  href = "/game/<%= game.id %>/player">
+                                    <span class = "player-circle" href = "/game/<%= game.id %>/player">Player</span>
+                                </a>
+                            </div>
+                            
+
+                             <div class = "player-circle-container">
+                                <a class = "player-circle-link" href = "/game/<%= game.id %>/spectator">
+                                    <span class = "player-circle" href = "/game/<%= game.id %>/spectator">Spectator</span>
+                                </a>
+                            </div>
+                            
                         </div>
                     </div>
                 </button>
-            </a>
+
             <br>    
 
         <% } %>
+        <% if(Object.keys(games).length){ %>
+             <a href = "/clear">
+                <button class = "game-button clear-games">Clear games</button>
+            </a>
 
+        <% } %>
+<!-- 
         <hr>
         <h3>Game data:</h3>
 
@@ -61,9 +79,9 @@
         <% } %>
 
 
+ -->
 
-
-
+ <!-- <a href = "/clear"><button>clear</button></a> -->
 
         <script src="https://cdn.socket.io/socket.io-1.4.0.js"></script>
         <script src="https://code.jquery.com/jquery-2.2.4.min.js" integrity="sha256-BbhdlvQf/xTY9gja0Dq3HiwQF8LaCRTXxZKRutelT44=" crossorigin="anonymous"></script>
