@@ -87,6 +87,7 @@ var cashRegisterMP3 = new Audio('../../assets/cash.mp3');
 var whooshMP3 = new Audio('../../assets/whoosh.mp3');
 
 var buzzerMP3 = new Audio('../../assets/buzz.mp3');
+var beepMP3 = new Audio('../../assets/beep.mp3');
 
 var soundtrackMP3 = new Audio('../../assets/soundtrack.mp3');
 
@@ -569,11 +570,11 @@ function movePlayer(game, player){
         y: player.y
     };
 
-    var moveFactor = 3;             // the larger this is, the less the player moves
+    var moveFactor = 2.5;             // the larger this is, the less the player moves
 
     if(player.stunnedEndTime > Date.now()){ 
         var timeLeft = (player.stunnedEndTime - Date.now())/1000;
-        moveFactor *= 1.3;                                                    // double the move factor - slow down by 2       
+        moveFactor *= 1.5   ;                                                    // double the move factor - slow down by 2       
     }
 
     // figure out where the player will be
@@ -753,6 +754,47 @@ $("body").on("click", "#activate-invisibility", function(){
 
 
 // SOCKET CODE
+
+
+socket.on('on deck', function(){
+
+    beepMP3.currentTime = 0;
+    beepMP3.volume = 0.2;
+    beepMP3.play();
+    centerMessage = "Starting in: 3"
+    centerFont = 40;
+
+    setTimeout(function(){
+
+        centerMessage = "Starting in: 2"
+        centerFont = 40;
+
+        beepMP3.currentTime = 0;
+        beepMP3.volume = 0.2;
+        beepMP3.play();
+    }, 1000);
+
+    setTimeout(function(){
+
+        centerMessage = "Starting in: 1"
+        centerFont = 40;
+
+        beepMP3.currentTime = 0;
+        beepMP3.volume = 0.2;
+        beepMP3.play();
+    }, 2000)
+
+    setTimeout(function(){
+
+        centerMessage = "Starting in: 1"
+        centerFont = 40;
+
+        buzzerMP3.currentTime = 0;
+        buzzerMP3.volume = 0.2;
+        buzzerMP3.play();
+    }, 3000)
+
+});
 
 
 socket.on('start game', function(){

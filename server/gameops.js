@@ -21,11 +21,11 @@ var originalGame = {
         hp: 100,
         player: 1,
         bullets: 50,
-        money: 50,
+        money: 500,
         stun: 0,
         invisibility: 0,
         collecting: "health",
-        moneyRate: 0.05,
+        moneyRate: 0.1,
         healthRate: 0.1,
         base: {
             color: "#6B769E",
@@ -51,11 +51,11 @@ var originalGame = {
         hp: 100,
         player: 2,
         bullets: 50,
-        money: 50,
+        money: 500,
         stun: 0,
         invisibility: 0,
         collecting: "health",
-        moneyRate: 0.05,
+        moneyRate: 0.1,
         healthRate: 0.1,
         base: {
             color: "#C900C2",
@@ -195,14 +195,14 @@ function movePlayer(game, player){
         y: game[player].y
     };
 
-    var moveFactor = 3;             // the larger this is, the less the player moves
+    var moveFactor = 2.5;             // the larger this is, the less the player moves
 
     if(game[player].stunnedEndTime > Date.now()){ 
 
 
         var timeLeft = (game[player].stunnedEndTime - Date.now())/1000;
 
-        moveFactor *= 1.3;                                                    // double the move factor - slow down by 2       
+        moveFactor *= 1.5;                                                    // double the move factor - slow down by 2       
     }
 
     // figure out where the player will be

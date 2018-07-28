@@ -321,8 +321,16 @@ MongoClient.connect(dbAddress, function(err, client){
                     // if both players are in and ready, start the game
                     if(thisGame.p1.ready && thisGame.p2.ready){
                         console.log("starting the game");
-                        thisGame.status = "in progress";
-                        io.emit("start game");
+
+
+                        thisGame.status = "on deck";
+                        io.emit("on deck");
+
+                        setTimeout(function(){
+                            thisGame.status = "in progress";
+                            io.emit("start game");
+                        }, 3000 )
+                        
                     }
 
                 });
