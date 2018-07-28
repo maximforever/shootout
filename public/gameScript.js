@@ -86,7 +86,7 @@ var shieldCollectMP3 = new Audio('../../assets/shieldCollect.mp3');
 var cashRegisterMP3 = new Audio('../../assets/cash.mp3');
 var whooshMP3 = new Audio('../../assets/whoosh.mp3');
 
-var buzzMP3 = new Audio('../../assets/buzz.mp3');
+var buzzerMP3 = new Audio('../../assets/buzz.mp3');
 
 var soundtrackMP3 = new Audio('../../assets/soundtrack.mp3');
 
@@ -802,7 +802,7 @@ socket.on('updated game', function(newData, sound){
             case "useStun":
                 playUseStunSound();
                 break;
-            case "buzz"
+            case "buzz":
                 playBuzzer();
                 break;
             default:
@@ -1089,11 +1089,12 @@ function scaleGame(game){
         });
     }
 
-
-    game.bullets.forEach(function(bullet){
-        bullet.x *= scaleMultiplier;
-        bullet.y *= scaleMultiplier;
-    });
+    if(game.bullets){
+        game.bullets.forEach(function(bullet){
+            bullet.x *= scaleMultiplier;
+            bullet.y *= scaleMultiplier;
+        });
+    }
 
     return game;
 
