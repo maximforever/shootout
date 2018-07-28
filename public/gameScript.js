@@ -761,12 +761,12 @@ socket.on('on deck', function(){
     beepMP3.currentTime = 0;
     beepMP3.volume = 0.2;
     beepMP3.play();
-    centerMessage = "Starting in: 3"
+    centerMessage = "3"
     centerFont = 40;
 
     setTimeout(function(){
 
-        centerMessage = "Starting in: 2"
+        centerMessage = "2"
         centerFont = 40;
 
         beepMP3.currentTime = 0;
@@ -776,7 +776,7 @@ socket.on('on deck', function(){
 
     setTimeout(function(){
 
-        centerMessage = "Starting in: 1"
+        centerMessage = "1"
         centerFont = 40;
 
         beepMP3.currentTime = 0;
@@ -786,7 +786,7 @@ socket.on('on deck', function(){
 
     setTimeout(function(){
 
-        centerMessage = "Starting in: 1"
+        centerMessage = "GO!"
         centerFont = 40;
 
         buzzerMP3.currentTime = 0;
