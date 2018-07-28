@@ -396,7 +396,7 @@ function drawPlayer(player){
             
             //console.log("LOW ON BULLETS!");
 
-            centerMessage = player.bullets;
+            centerMessage = player.bullets + " bullets left";
             centerFont = 60;
             centerAlpha = 0.6;
 
