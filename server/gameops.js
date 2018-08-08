@@ -175,7 +175,7 @@ function setGame(thisGame){
 
 function setMoveDirection(game, player, dir, angle){
 
-    console.log("SETTING DIRECTION FOR " + player); 
+    //console.log("SETTING DIRECTION FOR " + player); 
 
     var otherPlayer = (player == "p2") ? "p1" : "p2";
 
