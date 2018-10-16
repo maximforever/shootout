@@ -25,31 +25,27 @@
 
         <hr>
 
+        <div id="games-list">
 
-        <% for(key in games) { %>
-
-            <% var game = games[key] %>
-
-            
-                <button class = "game-button" id = "<%= game.id %>">
+                <button v-for="game in games" class = "game-button" id = "game.id">
                     <div class = "game-button-container">
 
 
-                        <div class = "game-info-name">Game <%= game.id.toString().substr(game.id.toString().length - 5, 4) %></div>
+                        <div class = "game-info-name">Game {{game.id.toString().substr(game.id.toString().length - 5, 4) }}</div>
                         <div class = "game-info-players">
                             
 
 
                             <div class = "player-circle-container">
-                                <a class = "player-circle-link"  href = "/game/<%= game.id %>/player">
-                                    <span class = "player-circle" href = "/game/<%= game.id %>/player">Player</span>
+                                <a class = "player-circle-link"  href = `/game/${game.id}/player`>
+                                    <span class = "player-circle" href = `/game/${game.id}/player`>Player</span>
                                 </a>
                             </div>
                             
 
                              <div class = "player-circle-container">
-                                <a class = "player-circle-link" href = "/game/<%= game.id %>/spectator">
-                                    <span class = "player-circle" href = "/game/<%= game.id %>/spectator">Spectator</span>
+                                <a class = "player-circle-link" href = `/game/${game.id}/spectator`>
+                                    <span class = "player-circle" href = `/game/${game.id}/spectator`>Spectator</span>
                                 </a>
                             </div>
                             
@@ -57,34 +53,16 @@
                     </div>
                 </button>
 
-            <br>    
+                <br>    
 
-        <% } %>
-        <% if(Object.keys(games).length){ %>
-             <a href = "/clear">
-                <button class = "game-button clear-games">Clear games</button>
-            </a>
-
-        <% } %>
-<!-- 
-        <hr>
-        <h3>Game data:</h3>
-
-        <% for(key in games) { %>
-
-            <% var game = games[key] %>
-
-            <pre><%= JSON.stringify(game, undefined, 4) %></pre>
-
-        <% } %>
-
-
- -->
-
- <!-- <a href = "/clear"><button>clear</button></a> -->
+                 <a v-if="Object.keys(games).length" href = "/clear">
+                    <button class = "game-button clear-games">Clear games</button>
+                </a>
+        </div>
 
         <script src="https://cdn.socket.io/socket.io-1.4.0.js"></script>
         <script src="https://code.jquery.com/jquery-2.2.4.min.js" integrity="sha256-BbhdlvQf/xTY9gja0Dq3HiwQF8LaCRTXxZKRutelT44=" crossorigin="anonymous"></script>
+        <script src="https://cdn.jsdelivr.net/npm/vue@2.5.17/dist/vue.js"></script>
         <script type="text/javascript" src = "../setup.js"></script>
     </BODY>
 </HTML>

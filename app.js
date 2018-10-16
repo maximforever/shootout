@@ -152,6 +152,10 @@ MongoClient.connect(dbAddress, function(err, client){
 
         });
 
+/*        app.get("/all-games", function(req,res){
+            res.send(currentGames);
+        });
+*/
 
         /* SOCKET IO */
 
@@ -161,6 +165,17 @@ MongoClient.connect(dbAddress, function(err, client){
             // when a player connects, based on params whether this can be added as a P1, or a P2
 
             var thisPlayer, otherPlayer;
+
+            socket.on("get all games", function(){
+                console.log("getting all games");
+                io.emit("updated game list", currentGames);
+            })
+
+
+
+
+
+
 
             if(thisGame != null){
 
@@ -190,7 +205,7 @@ MongoClient.connect(dbAddress, function(err, client){
                     player: thisPlayer
                 }
 
-                socket.emit("updated game", newData, [])                     
+                socket.emit("updated game", newData, []) ;                    
 
                 // console.log("this user id is: " + socket.id);
 
@@ -334,6 +349,21 @@ MongoClient.connect(dbAddress, function(err, client){
                     }
 
                 });
+            } else {
+                console.log("There is no game");
+
+                var countOfGames = 0;
+
+                var thisConnection = setInterval(function(){
+
+                     var gameNumberHasChanged = ( countOfGames == currentGames.length);
+
+                    if(gameNumberHasChanged){
+                        countOfGames = currentGames.length;
+                        io.emit("updated game list", currentGames);
+                    }
+                    
+                }, 20);
             }
 
         });
