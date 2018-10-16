@@ -7,6 +7,16 @@ var app = new Vue({
     el: "#games-list",
     data: {
         games: {}
+    },
+    methods: {
+        playerUrl(id){
+            return ("/game/" + id + "/player");
+        },
+
+        spectatorUrl(id){
+            console.log(id);
+            return ("/game/" + id + "/spectator");
+        }
     }
 });
 
@@ -14,8 +24,6 @@ socket.emit("get all games");
 
 
 socket.on("updated game list", function(gameList){
-    console.log("got an updated game list");
-    console.log(gameList);
     app.games = gameList;
 })
 

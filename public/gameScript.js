@@ -40,7 +40,6 @@ var gameOver = false;
 var offsetOn = false;
 var lastDirection = null;         // keep track of last key pressed
 
-
 // load up images for canvas 
 var healthImage = new Image();
 healthImage.src = "../../assets/icons/health.png";
@@ -153,10 +152,6 @@ function gameLoop(){
         drawBoard(currentGame);
 
     } 
-
-    if(currentGame.status == "gameover"){
-        text(currentGame.winner + " has won.", WIDTH/2, HEIGHT/2, 30*scaleMultiplier, "white", true);
-    }
     
     var animationCycle = setTimeout(function(){ requestAnimationFrame(gameLoop) }, animationSpeed);
 
@@ -897,7 +892,11 @@ socket.on('updated bullet locations', function(updatedBullets){
 
 socket.on('gameover', function(player){
     gameOver = true;
-    $("#play-again-wrapper").show();
+
+    var winningColor = (player == "p1") ? "#6B769E" : "#F26DF9";
+
+    $("#winning-player").text(player);
+    $("#play-again-wrapper").css("background", winningColor).show();
 });
 
 

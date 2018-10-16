@@ -86,7 +86,7 @@ MongoClient.connect(dbAddress, function(err, client){
 
         app.get("/", function(req, res){
             //console.log(currentGames);
-            res.render("index", { games: currentGames }); 
+            res.render("index"); 
         });
 
         app.get("/clear", function(req, res){
@@ -241,13 +241,16 @@ MongoClient.connect(dbAddress, function(err, client){
                         
 
                         if(updatedGame[otherPlayer] && updatedGame[otherPlayer].hp <= 0){
-                            updatedGame.status = "gameover";
+                            if(updatedGame.status != "gameover"){
+                                updatedGame.status = "gameover";
 
-                            if(updatedGame.winner == ""){
-                                updatedGame.winner = thisPlayer;
-                            }
+                                if(updatedGame.winner == ""){
+                                    updatedGame.winner = thisPlayer;
+                                }
+                                
                             
-                            io.emit("gameover", thisPlayer)
+                                io.emit("gameover", thisPlayer);
+                            }
                         }
                     }
                 }, 20)

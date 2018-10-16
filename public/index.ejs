@@ -27,7 +27,7 @@
 
         <div id="games-list">
 
-                <button v-for="game in games" class = "game-button" id = "game.id">
+                <button v-for="game in games" v-cloak class = "game-button" id = "game.id">
                     <div class = "game-button-container">
 
 
@@ -37,15 +37,15 @@
 
 
                             <div class = "player-circle-container">
-                                <a class = "player-circle-link"  href = `/game/${game.id}/player`>
-                                    <span class = "player-circle" href = `/game/${game.id}/player`>Player</span>
+                                <a class = "player-circle-link"  :href = "playerUrl(game.id)">
+                                    <span class = "player-circle" :href = "playerUrl(game.id)">Player</span>
                                 </a>
                             </div>
                             
 
                              <div class = "player-circle-container">
-                                <a class = "player-circle-link" href = `/game/${game.id}/spectator`>
-                                    <span class = "player-circle" href = `/game/${game.id}/spectator`>Spectator</span>
+                                <a class = "player-circle-link" :href = "spectatorUrl(game.id)">
+                                    <span class = "player-circle" :href = "spectatorUrl(game.id)">Spectator</span>
                                 </a>
                             </div>
                             
