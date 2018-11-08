@@ -335,8 +335,8 @@ function createBullet(game, target, thisPlayer, io){
         color: "#ED0014",
         player: thisPlayer,
         stun: false,
-        speed: 2,                       // this should vary with powerups
-        damage: 3,                      // this should vary with powerups
+        speed: 3,                       // this should vary with powerups
+        damage: 6,                      // this should vary with powerups
         expired: false,
         id: Math.floor(Date.now()*Math.random())
     }
