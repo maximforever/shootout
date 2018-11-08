@@ -26,7 +26,7 @@ var originalGame = {
         invisibility: 0,
         collecting: "health",
         moneyRate: 0.1,
-        healthRate: 0.1,
+        healthRate: 0.15,
         base: {
             color: "#6B769E",
             width: 40,
@@ -335,8 +335,8 @@ function createBullet(game, target, thisPlayer, io){
         color: "#ED0014",
         player: thisPlayer,
         stun: false,
-        speed: 3,                       // this should vary with powerups
-        damage: 6,                      // this should vary with powerups
+        speed: 2.75,                    // this should vary with powerups
+        damage: 5,                      // this should vary with powerups
         expired: false,
         id: Math.floor(Date.now()*Math.random())
     }
