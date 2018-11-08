@@ -202,7 +202,7 @@ function movePlayer(game, player){
 
         var timeLeft = (game[player].stunnedEndTime - Date.now())/1000;
 
-        moveFactor *= 1.5;                                                    // double the move factor - slow down by 2       
+        moveFactor *= 2.5;                                                    // double the move factor - slow down by 2       
     }
 
     // figure out where the player will be
