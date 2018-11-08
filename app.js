@@ -173,14 +173,11 @@ MongoClient.connect(dbAddress, function(err, client){
 
 
 
-
-
-
-
             if(thisGame != null){
 
                 console.log("A USER CONNECTED: " + socket.id);
                 console.log("incomingPlayer: " + thisGame.incomingPlayer);
+                
                 if(thisGame.incomingPlayer == "p1"  || thisGame.incomingPlayer == "p2"){                    
                     if(thisGame.participants[thisGame.incomingPlayer] == null){
                         console.log("Setting player " + thisGame.incomingPlayer + " id as: " + socket.id);
@@ -207,18 +204,16 @@ MongoClient.connect(dbAddress, function(err, client){
 
                 socket.emit("updated game", newData, []) ;                    
 
-                // console.log("this user id is: " + socket.id);
+
 
                 var thisConnection = setInterval(function(){
 
                     // this is effectively the game loop
                     // only run it if both players are connected
 
-                    // HAVE START ANIMATION!
-
                     if(thisGame.participants.p1 != null && thisGame.participants.p2 != null){
 
-                        var updatedGame = thisGame;
+                        var updatedGame = thisGame;             // these should both reference the same object, I think
 
                         var newData = {
                             game: updatedGame,
@@ -230,27 +225,26 @@ MongoClient.connect(dbAddress, function(err, client){
 
                         var sound = newData.game[thisPlayer].queuedUpSounds.shift()
 
-                        socket.emit("updated game", newData, sound)
-
-
                         gameops.movePlayer(thisGame, thisPlayer);
                         gameops.healPlayer(thisGame, thisPlayer);
                         gameops.makeMoney(thisGame, thisPlayer);
                         gameops.moveBullets(thisGame, thisPlayer);
 
-                        
+                        // send the new data to just this socket
+                        socket.emit("updated game", newData, sound);
 
-                        if(updatedGame[otherPlayer] && updatedGame[otherPlayer].hp <= 0){
-                            if(updatedGame.status != "gameover"){
-                                updatedGame.status = "gameover";
 
-                                if(updatedGame.winner == ""){
-                                    updatedGame.winner = thisPlayer;
-                                }
-                                
+                        if(thisGame[thisPlayer].hp <= 0 && thisGame.status != "gameover"){
                             
-                                io.emit("gameover", thisPlayer);
+                            updatedGame.status = "gameover";
+
+                            if(updatedGame.winner == ""){
+                                updatedGame.winner = otherPlayer;        
                             }
+                            
+                            console.log("GAME OVER!");
+
+                            io.emit("gameover", otherPlayer);
                         }
                     }
                 }, 20)
@@ -273,10 +267,10 @@ MongoClient.connect(dbAddress, function(err, client){
                     console.log(thisGame.participants);
 
                     // if everyone leaves, delete the game
-                    if(thisGame.participants.p1 == null && thisGame.participants.p2 == null && thisGame.participants.spectators.length == 0){
+/*                    if(thisGame.participants.p1 == null && thisGame.participants.p2 == null && thisGame.participants.spectators.length == 0){
                         console.log("deleting game!");
                         delete currentGames[thisGame.id];
-                    }
+                    }*/
 
                     // send first update
                     var newData = {

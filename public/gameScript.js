@@ -152,7 +152,7 @@ function gameLoop(){
         drawBoard(currentGame);
 
     } 
-    
+
     var animationCycle = setTimeout(function(){ requestAnimationFrame(gameLoop) }, animationSpeed);
 
 }
@@ -287,8 +287,8 @@ function drawBackround(color){
     //var groundPattern = ctx.createPattern(ground, 'repeat');
 
     rect(-WIDTH, -HEIGHT, WIDTH*3, HEIGHT*3, "black");
-    ctx.drawImage(ground, 0 + offset.x, 0 + offset.y, canvas.width, canvas.height);
-    // rect(0, 0, WIDTH, HEIGHT, groundPattern); //color);      // 
+    //ctx.drawImage(ground, 0 + offset.x, 0 + offset.y, canvas.width, canvas.height);
+    rect(0, 0, WIDTH, HEIGHT, "#00447C"); //color);      // 
 
 }
 
@@ -421,7 +421,7 @@ function drawObstacles(){
     if(currentGame.obstacles){
         currentGame.obstacles.forEach(function(obstacle){
             var circuitPattern = ctx.createPattern(circuit, 'repeat');
-            rect(obstacle.x, obstacle.y, obstacle.width, obstacle.height, circuitPattern);
+            rect(obstacle.x, obstacle.y, obstacle.width, obstacle.height, "#000000"/*circuitPattern*/);
         })
 
     }
@@ -795,11 +795,11 @@ socket.on('on deck', function(){
 socket.on('start game', function(){
 
     // start the soundtrack
-
+/*
     soundtrackMP3.currentTime = 0;
     soundtrackMP3.volume = 0.2;
     soundtrackMP3.play();
-
+*/
 });
 
 // when we get an updated game, set current game to updated game.
@@ -892,6 +892,11 @@ socket.on('updated bullet locations', function(updatedBullets){
 
 socket.on('gameover', function(player){
     gameOver = true;
+
+    console.log(player + " has won");
+    console.log("GAME OVER!");
+
+//    soundtrackMP3.stop();
 
     var winningColor = (player == "p1") ? "#6B769E" : "#F26DF9";
 

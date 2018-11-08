@@ -27,11 +27,11 @@
 
         <div id="games-list">
 
-                <button v-for="game in games" v-cloak class = "game-button" id = "game.id">
+                <button v-for="game in games" class = "game-button" id = "game.id" v-cloak>
                     <div class = "game-button-container">
 
 
-                        <div class = "game-info-name">Game {{game.id.toString().substr(game.id.toString().length - 5, 4) }}</div>
+                        <div class = "game-info-name" v-cloak>Game {{game.id.toString().substr(game.id.toString().length - 5, 4) }}</div>
                         <div class = "game-info-players">
                             
 

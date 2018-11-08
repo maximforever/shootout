@@ -233,7 +233,6 @@ function movePlayer(game, player){
     // only move players if the new location doesn't collide with the other player
     if(!(distanceBetween(newLocation.x, game[otherPlayer].x, newLocation.y, game[otherPlayer].y) > (game.p1.size + game.p2.size ))){
         canGoThere = false;
-        console.log("colliding");
     }
 
     //can't go onto the opponent's base
@@ -403,6 +402,11 @@ function checkForBulletHits(game, bullet, io){
 
         console.log(otherPlayer + " hit!");
         game[otherPlayer].hp -= bullet.damage;
+
+        if(game[otherPlayer].hp <= 0){
+            console.log(otherPlayer + " DEAD");
+            //  game.status = "gameover";
+        }
 
         if(bullet.stun){
             game[bullet.player].queuedUpSounds.push("applyStun");
