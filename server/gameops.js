@@ -21,7 +21,7 @@ var originalGame = {
         hp: 100,
         player: 1,
         bullets: 50,
-        money: 50,
+        money: 500,
         stun: 0,
         invisibility: 0,
         collecting: "health",
@@ -51,7 +51,7 @@ var originalGame = {
         hp: 100,
         player: 2,
         bullets: 50,
-        money: 50,
+        money: 500,
         stun: 0,
         invisibility: 0,
         collecting: "health",
@@ -202,7 +202,7 @@ function movePlayer(game, player){
 
         var timeLeft = (game[player].stunnedEndTime - Date.now())/1000;
 
-        moveFactor *= 2.5;                                                    // double the move factor - slow down by 2       
+        moveFactor *= 2.2;                                                    // double the move factor - slow down by 2       
     }
 
     // figure out where the player will be
@@ -400,12 +400,11 @@ function checkForBulletHits(game, bullet, io){
 
         bullet.expired = true;
 
-        console.log(otherPlayer + " hit!");
         game[otherPlayer].hp -= bullet.damage;
-
+        
         if(game[otherPlayer].hp <= 0){
+            game[otherPlayer].hp = 0;
             console.log(otherPlayer + " DEAD");
-            //  game.status = "gameover";
         }
 
         if(bullet.stun){
@@ -423,33 +422,14 @@ function checkForObstacleHits(game, bullet){
         if(inRectangle(bullet.x, bullet.y, obstacle)){ bullet.expired = true; }
     });
 
-
-    // if we hit the base, switch from healing to money
-
-/*
-    if(bullet.player == "p1" && inRectangle(bullet.x, bullet.y, game.p1.base)){
-        console.log(game.p1.collecting);
-        game.p1.collecting = (game.p1.collecting == "money") ? "health" : "money";
-        bullet.expired = true;
-    }
-
-    if(bullet.player == "p2" && inRectangle(bullet.x, bullet.y, game.p2.base)){
-        console.log(game.p2.collecting);
-        game.p2.collecting = (game.p2.collecting == "money") ? "health" : "money";
-        bullet.expired = true;
-    }
-
-
-*/
-
 }
 
 // BUY FUNCTIONS
 
 
-function buy(game, player, socket, item){
+function buy(game, incomingPlayer, socket, item){
     console.log("buying " + item);
-    player = game[player];
+    player = game[incomingPlayer];
     var thisItem = itemStore[item];            // itemStore holds objects that describe the items & prices
 
     console.log(thisItem);
@@ -467,6 +447,20 @@ function buy(game, player, socket, item){
         socket.emit(item + " bought");
 
 
+
+        // activate right after buying 
+
+        if(item == "stun"){
+            activateStun(game, incomingPlayer);    
+        }
+
+        if(item == "invisibility"){
+            activateInvisibility(game, incomingPlayer);    
+        }
+
+        
+
+
     } else {
         console.log("not enough money");
         player.queuedUpSounds.push("buzz");
@@ -480,9 +474,14 @@ function buy(game, player, socket, item){
 
 function activateStun(game, player){
 
-    if(game[player].stun > 0 && game[player].stunBulletEndTime <= Date.now()){           // if player not currently stunning
+    if(game[player].stun > 0){
         game[player].stun--;
-        game[player].stunBulletEndTime = (Date.now() + 1000 * 10);         // 10 secs of stun
+        
+        if(game[player].stunBulletEndTime <= Date.now()){
+            game[player].stunBulletEndTime = Date.now();
+        }
+
+        game[player].stunBulletEndTime += (1000 * 10);         // 10 secs of stun
         game[player].queuedUpSounds.push("useStun")
         game.spectators.queuedUpSounds.push("useStun");
     }
@@ -493,9 +492,14 @@ function activateInvisibility(game, player, io){
     console.log(Date.now());
     console.log(game[player].invisibilityEndTime);
 
-    if(game[player].invisibility > 0 && game[player].invisibilityEndTime <= Date.now()){ // if player not currently invisible
+    if(game[player].invisibility > 0){
         game[player].invisibility--;
-        game[player].invisibilityEndTime = (Date.now() + 1000 * 10);         // 10 secs of invisibility
+
+        if(game[player].invisibilityEndTime <= Date.now()){
+            game[player].invisibilityEndTime = Date.now();
+        }
+
+        game[player].invisibilityEndTime += (1000 * 10);         // 10 secs of invisibility
     
         game[player].queuedUpSounds.push("useInvisibility")
         game.spectators.queuedUpSounds.push("useInvisibility");

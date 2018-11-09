@@ -7,6 +7,8 @@
         <meta name="description" content="This will be a description">
 
         <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.0.10/css/all.css">
+        <link rel = "stylesheet" type = "text/css" href ="../../assets/icons/rpg-awesome.min.css"/>
+
 
         <link rel = "stylesheet" type = "text/css" href ="../../stylesheet.css"/>
         <link rel="shortcut icon" type="image/png" href="../../assets/icon.png">
@@ -27,9 +29,13 @@
                 </div>
 
 
-                <div class = "screen-wrapper">
-                    <div class = "left-screen-column">
+                <div id = "screen-wrapper">
+
+                    <div id = "canvas-wrapper">
                         <canvas id = "canvas" width = "400" height="300"></canvas>
+                    </div>
+
+                    <div id = "info-panel-wrapper">
 
                         <div id = "powerup-timer">
                             <span id = "invisibility-time-left"></span>
@@ -41,30 +47,53 @@
 
                             <div class = "panel-container">
                                 <span class = "one-resource" id = "health-resource">
-                                    <i class="fas fa-plus"></i> <span id = "health-count">0</span>
+                                    <i class="fas fa-plus"></i> <span class="resource-count" id = "health-count">0</span>
                                 </span>
                                 <span class = "one-resource" id = "money-resource">
-                                    <i class="fas fa-dollar-sign"></i> <span id = "money-count">0</span>
+                                    <i class="fas fa-dollar-sign"></i><span class="resource-count" id = "money-count">0</span>
                                 </span>
                                 <span class = "one-resource">
-                                    <i class="fas fa-fire"></i> <span id = "bullet-count">0</span>
+                                    <i class="ra ra-bullets"></i> <span class="resource-count" id = "bullet-count">0</span>
                                 </span>
-                                <span class = "one-resource">
-                                    <button class = "use-button" id = "activate-stun">
-                                        <span class = "powerup-key">1</span>
-                                        <i class="fas fa-vial"></i>  <span id = "stun-count">0</span>
-                                    </button>
-                                </span>
-                                <span class = "one-resource">
-                                    <button class = "use-button" id = "activate-invisibility">
-                                        <span class = "powerup-key">2</span>
-                                        <i class="far fa-eye-slash"></i> <span id = "invisibility-count">0</span>
-                                    </button>
-                                </span>
+                                
+                                <!-- BUY -->
+                                <div id = "shop-panel">
+                                    <span class = "one-resource">
+                                        <button class = "use-button" id = "buy-bullets">
+                                            <div class = "powerup-info">
+                                                <span class = "powerup-key">E</span>
+                                                <i class="ra ra-bullets"></i>  <span class="resource-count" id = "bullet-count">50</span>
+                                            </div>
+                                            <div class = "powerup-cost">$75</div>
+                                        </button>
+                                    </span>
+
+                                    <span class = "one-resource">
+                                        <button class = "use-button" id = "buy-stuns">
+                                            <div class = "powerup-info">
+                                                <span class = "powerup-key">R</span>
+                                                <i class="ra ra-fizzing-flask"></i>  <span class="resource-count" id = "stun-count">1</span>
+                                            </div>
+                                            <div class = "powerup-cost">$100</div>
+                                        </button>
+                                    </span>
+                                    <span class = "one-resource">
+                                        <button class = "use-button" id = "buy-invisibility">
+                                            <div class = "powerup-info">
+                                                <span class = "powerup-key">F</span>
+                                                <i class="far fa-eye-slash"></i> <span class="resource-count" id = "invisibility-count">1</span>
+                                            </div>
+                                            <div class = "powerup-cost">$200</div>
+                                        </button>
+                                    </span>
+                                </div>
                             </div>
                         </div>
+
                     </div>
 
+
+<!-- 
                     <div class = "right-screen-column">
                         <div class = "panel" id = "shop">
                         <div class = "panel-title">Buy</div>
@@ -104,7 +133,7 @@
 
 
 
-                
+                 -->
                 
                 <div id = "play-again-wrapper">
                     <div id="winning-player-wrapper">
@@ -131,7 +160,7 @@
 
             
             
-            <pre id="game-json"></pre>
+<!--             <pre id="game-json"></pre> -->
 
 <!--         <script src="/socket.io/socket.io.js"></script> -->
         <script src="https://cdn.socket.io/socket.io-1.4.0.js"></script>

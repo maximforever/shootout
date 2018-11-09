@@ -136,14 +136,10 @@ MongoClient.connect(dbAddress, function(err, client){
                 }
 
 
+                // why?
                 thisGame.incomingPlayer = incomingPlayer;
-              
-                if(thisGame.participants[incomingPlayer] == null || incomingPlayer == "spectator"){
-                    res.render("game");
-                } else {
-                    console.log("The slot for " + req.params.player + " is already taken");
-                    res.redirect("/")
-                }                        
+
+                res.render("game");
         
             } else {
                 console.log("that's not a real game");
@@ -173,12 +169,17 @@ MongoClient.connect(dbAddress, function(err, client){
 
 
 
+
             if(thisGame != null){
+
+                /* this happens once on connection */
 
                 console.log("A USER CONNECTED: " + socket.id);
                 console.log("incomingPlayer: " + thisGame.incomingPlayer);
                 
-                if(thisGame.incomingPlayer == "p1"  || thisGame.incomingPlayer == "p2"){                    
+                if(thisGame.incomingPlayer == "p1"  || thisGame.incomingPlayer == "p2"){  
+
+                    // if that player socket ID isn't taken, set it                  
                     if(thisGame.participants[thisGame.incomingPlayer] == null){
                         console.log("Setting player " + thisGame.incomingPlayer + " id as: " + socket.id);
                         thisGame.participants[thisGame.incomingPlayer] = socket.id;
@@ -193,7 +194,11 @@ MongoClient.connect(dbAddress, function(err, client){
                 }
 
                 thisPlayer = thisGame.incomingPlayer;
-                otherPlayer = (thisPlayer.player == 1) ? "p2" : "p1";
+
+                console.log(`this player: ${thisPlayer}`);
+
+                otherPlayer = (thisPlayer == "p1") ? "p2" : "p1";
+
                 thisGame.incomingPlayer = null;          // reset incoming player for the next player
 
                 // send first update
@@ -205,6 +210,7 @@ MongoClient.connect(dbAddress, function(err, client){
                 socket.emit("updated game", newData, []) ;                    
 
 
+                /* this is the game loop, runs only if both players are connected*/
 
                 var thisConnection = setInterval(function(){
 
@@ -236,6 +242,9 @@ MongoClient.connect(dbAddress, function(err, client){
 
                         if(thisGame[thisPlayer].hp <= 0 && thisGame.status != "gameover"){
                             
+                            console.log("THE GAME IS OVER!");
+                            console.log(`${thisPlayer} has been killed. ${otherPlayer} has won`);
+
                             updatedGame.status = "gameover";
 
                             if(updatedGame.winner == ""){

@@ -2,10 +2,11 @@
 body {
     font-family: 'Open Sans', sans-serif;
     font-weight: 600;
+    padding: 0;
+    margin: 0;
 }
 
 canvas {
-    border: 1px solid black;
     margin: 0 auto;
     display: block;
     cursor: crosshair;
@@ -167,21 +168,25 @@ pre {
 
 /* layout */
 
-.screen-wrapper {
+#screen-wrapper {
     display: flex;
+    flex-direction: column;
+    height: 100vh;
+    min-height: 500px;
+}
+
+#canvas-wrapper {
+    display: flex;
+    flex-grow: 1;
     justify-content: center;
+    align-items: center;
 }
 
-.left-screen-column {
+#info-panel-wrapper{
     display: flex;
     flex-direction: column;
+    align-self: flex-end;    
 }
-
-.right-screen-column {
-    display: flex;
-    flex-direction: column;
-}
-
 
 .panel {
     width: 400px;
@@ -198,30 +203,33 @@ pre {
     display: flex;
     justify-content: space-around;
     align-items: center;
+    width: 100vw;
 }
 
 
- #shop{ 
-    width: 100%;
-    flex-grow: 1;
-    padding: 20px; 
+ #shop-panel{ 
+    display: flex;
+    width: 40%;
 }
 
-
-
-#shop .panel-container {
-    padding: 10px 0px;
-    flex-direction: column;
-}
 
 
 .one-resource {
     width: 20%;
     text-align: center;
-    height: 2.5rem;
+    height: 5rem;
     display: flex;
     justify-content: center;
     align-items: center;
+    font-size: 1.7rem;
+}
+
+ #shop-panel .one-resource {
+    flex-grow: 1;
+ }
+
+.resource-count {
+    padding: 0 0.5rem;
 }
 
 .active-resource {
@@ -255,23 +263,41 @@ pre {
 
 
 .use-button {
-    font-size: 1rem;
+    font-size: 1.2rem;
     width: 100%;
     height: 100%;
-    border: none;
-    background: #ffe7bc;
+    border: 0.2rem solid #a9b2bd;
+    background: #0b223c;
+    color: #a7b2bf;
     border-radius: 5px;
-    font-size: 0.9rem;
-    border: 1px solid black;
     position: relative;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-evenly;
 }
 
 .use-button:hover:not([disabled]) {
-    background: #ffa637;
+    background: #12447d;
+}
+
+.powerup-cost {
+    display: flex;
+    color: #c59f2c;
+    font-size: 1rem;
+}
+
+.ra {
+    font-size: 1.6rem;
+}
+
+.far {
+    font-size: 1.4rem;
 }
 
 .use-button:active:not([disabled]) {
-    background: #172256;
+    background: #12447d;
     color: white;
 }
 
@@ -291,7 +317,6 @@ pre {
 }
 
 .buy-button {
-    background: #C8E9EB;
     box-shadow: 0 0 5px #5a5a5a;
     border-radius: 5px;
     height: 2.5rem;
@@ -325,11 +350,12 @@ pre {
 }
 
 #powerup-timer{
-    height: 2vh;
+    height: 2rem;
     background: #505050;
-    border: 1px solid black;
-    margin: auto; 
+    border: 1px solid #3c3b3b;
+    margin: auto;
     width: 100%;
+    box-sizing: border-box;
 }
 
 #invisibility-time-left{
@@ -360,6 +386,7 @@ pre {
     border-radius: 10px;
     color: #a7b2bf;
     text-align: center;
+    z-index: 2;
 
     display: none;
 }

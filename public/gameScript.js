@@ -117,7 +117,7 @@ function gameInit(){
 
     
     // we want our canvas to be 75% of the screen height
-    scaleMultiplier = window.innerHeight / HEIGHT * 0.75;
+    scaleMultiplier = $("#canvas-wrapper").innerHeight() / HEIGHT;
 
     WIDTH = canvas.width *= scaleMultiplier;
     HEIGHT = canvas.height *= scaleMultiplier;
@@ -259,7 +259,10 @@ function drawBoard(game){
     }
 
     if(player && typeof(player.hp) != "undefined"){
-        $("#health-count").text(Math.floor(player.hp));
+        if(player.hp != parseInt($("#health-count").text())){
+            $("#health-count").text(Math.floor(player.hp));
+        }
+        
     }
 
     if(player && typeof(player.stun) != "undefined"){
@@ -296,10 +299,14 @@ function updatePowerupTime(){
 
     if(currentGame[thisPlayer].invisibilityEndTime > Date.now()){
         var timeLeft = (currentGame[thisPlayer].invisibilityEndTime - Date.now())/1000;
-        var percentage = timeLeft/10 * 100;
+        var percentage = timeLeft/10 * 100;             // !! this 10 is the issue it's 10 seconds
         if(percentage > 100){ percentage = 100 }
 
+        console.log(percentage);
+
         $("#invisibility-time-left").css("width", percentage + "%");
+    } else {
+        $("#invisibility-time-left").css("width", 0 + "%");
     }
 
     if(currentGame[thisPlayer].stunBulletEndTime > Date.now()){
@@ -309,6 +316,8 @@ function updatePowerupTime(){
         if(percentage > 100){ percentage = 100 }
 
         $("#stun-time-left").css("width", percentage + "%");
+    } else {
+        $("#stun-time-left").css("width", 0 + "%");
     }
 
 }
@@ -381,15 +390,15 @@ function drawPlayer(player){
 
     // draw stun circle
 
+    if(player.stunnedEndTime > Date.now()){
+        drawStunnedOverlay(player);
+    }
+
+
+
     if(("p" + player.player) == thisPlayer){
 
-
-        if(player.stunnedEndTime > Date.now()){
-            drawStunnedOverlay(player);
-        }
-
-         // draw bullet text
-
+        // draw bullet text
         if(Number(player.bullets) <= 10 /*&& centerMessage == null && centerMessage*/){
             
             //console.log("LOW ON BULLETS!");
@@ -522,18 +531,6 @@ function drawStunnedOverlay(player) {
 
     ctx.globalAlpha = (0.5 - 0.5*(1 - timeLeft/10));
     var radius = WIDTH/2 * (timeLeft/10);
-/*
-    ctx.beginPath();
-    ctx.rect(0 ,0,WIDTH*3,HEIGHT*3);
-    ctx.closePath();
-
-    ctx.fillStyle = "#a6f4d0";
-    ctx.stroke();
-    ctx.fill();*/
-
-
-
-
 
     ctx.beginPath();
     ctx.arc(player.x, player.y, radius, 0, Math.PI*2, false);               // start at 0, end at Math.PI*2
@@ -614,13 +611,13 @@ function movePlayer(game, player){
 $( window ).resize(function() {
     // we want our canvas to be 75% of the screen height
     
-    if(window.innerHeight > (300/0.75)){                    // we want the canvas to be at LEAST 300px tall
+    if($("#canvas-wrapper").innerHeight() > (300)){                    // we want the canvas to be at LEAST 300px tall
 
 
         scaleMultiplier = 1/scaleMultiplier;
         scaleGame(currentGame);
 
-        scaleMultiplier = window.innerHeight / 300 * 0.75;
+        scaleMultiplier = $("#canvas-wrapper").innerHeight() / 300;
 
         scaleGame(currentGame);
         
@@ -858,7 +855,7 @@ socket.on('stun bought', function(updatedBullets){
     $("#buy-stuns").addClass("recently-bought").css("background", "#fde7bc");
 
     setTimeout(function(){
-        $("#buy-stuns").removeClass("recently-bought").css("background", "#C8E9EB");;
+        $("#buy-stuns").removeClass("recently-bought").css("background", "#0b223c");;
 
     }, 300);
 });
@@ -869,7 +866,7 @@ socket.on('bullets bought', function(updatedBullets){
     $("#buy-bullets").addClass("recently-bought").css("background", "#fde7bc");
 
     setTimeout(function(){
-        $("#buy-bullets").removeClass("recently-bought").css("background", "#C8E9EB");;
+        $("#buy-bullets").removeClass("recently-bought").css("background", "#0b223c");;
     }, 300);
 });
 
@@ -879,7 +876,7 @@ socket.on('invisibility bought', function(updatedBullets){
     $("#buy-invisibility").addClass("recently-bought").css("background", "#fde7bc");
 
     setTimeout(function(){
-        $("#buy-invisibility").removeClass("recently-bought").css("background", "#C8E9EB");;
+        $("#buy-invisibility").removeClass("recently-bought").css("background", "#0b223c");;
 
     }, 300);
 });
@@ -1036,8 +1033,12 @@ function drawBaseType(player){
     var image;
 
     if(currentGame[player].collecting == "health"){
-        $("#health-resource").addClass("active-resource");
-        $("#money-resource").removeClass("active-resource");
+
+        if(player == thisPlayer){
+            $("#health-resource").addClass("active-resource");
+            $("#money-resource").removeClass("active-resource");
+        }
+        
 
 //        console.log(currentGame[thisPlayer].hp);
         var healthColor = (currentGame[thisPlayer].hp >= 100) ? "black" : "#065f06";
@@ -1045,8 +1046,13 @@ function drawBaseType(player){
 
         image = healthImage;
     } else if(currentGame[player].collecting == "money"){
-        $("#money-resource").addClass("active-resource");
-        $("#health-resource").removeClass("active-resource");
+
+        if(player == thisPlayer){
+            $("#money-resource").addClass("active-resource");
+            $("#health-resource").removeClass("active-resource");
+        }
+
+        
         image = moneyImage;
     } else {
 /*        console.log("Currently collecting: ");
