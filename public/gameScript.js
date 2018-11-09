@@ -290,8 +290,9 @@ function drawBackround(color){
     //var groundPattern = ctx.createPattern(ground, 'repeat');
 
     rect(-WIDTH, -HEIGHT, WIDTH*3, HEIGHT*3, "black");
-    //ctx.drawImage(ground, 0 + offset.x, 0 + offset.y, canvas.width, canvas.height);
-    rect(0, 0, WIDTH, HEIGHT, "#00447C"); //color);      // 
+    rect(0, 0, WIDTH, HEIGHT, color);       
+    ctx.drawImage(ground, 0 + offset.x, 0 + offset.y, canvas.width, canvas.height);
+    
 
 }
 
@@ -430,7 +431,7 @@ function drawObstacles(){
     if(currentGame.obstacles){
         currentGame.obstacles.forEach(function(obstacle){
             var circuitPattern = ctx.createPattern(circuit, 'repeat');
-            rect(obstacle.x, obstacle.y, obstacle.width, obstacle.height, "#000000"/*circuitPattern*/);
+            rect(obstacle.x, obstacle.y, obstacle.width, obstacle.height, circuitPattern);
         })
 
     }
@@ -792,11 +793,11 @@ socket.on('on deck', function(){
 socket.on('start game', function(){
 
     // start the soundtrack
-/*
+
     soundtrackMP3.currentTime = 0;
     soundtrackMP3.volume = 0.2;
     soundtrackMP3.play();
-*/
+
 });
 
 // when we get an updated game, set current game to updated game.
@@ -893,7 +894,7 @@ socket.on('gameover', function(player){
     console.log(player + " has won");
     console.log("GAME OVER!");
 
-//    soundtrackMP3.stop();
+    soundtrackMP3.stop();
 
     var winningColor = (player == "p1") ? "#6B769E" : "#F26DF9";
 
