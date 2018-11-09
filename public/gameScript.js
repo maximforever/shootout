@@ -525,7 +525,7 @@ function drawStunnedOverlay(player) {
     ctx.save();
     
     var timeLeft = (player.stunnedEndTime - Date.now())/1000;
-    var percentage = timeLeft/10 * 100;
+    var percentage = timeLeft/5 * 100;                      // stun lasts 5 seconds!
 
     ctx.beginPath();
 
@@ -566,7 +566,7 @@ function movePlayer(game, player){
 
     if(player.stunnedEndTime > Date.now()){ 
         var timeLeft = (player.stunnedEndTime - Date.now())/1000;
-        moveFactor *= 1.5   ;                                                    // double the move factor - slow down by 2       
+        moveFactor *= 2.2   ;         // double the move factor - slow down by 2       
     }
 
     // figure out where the player will be
