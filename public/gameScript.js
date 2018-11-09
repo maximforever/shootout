@@ -525,7 +525,7 @@ function drawStunnedOverlay(player) {
     ctx.save();
     
     var timeLeft = (player.stunnedEndTime - Date.now())/1000;
-    var percentage = timeLeft/5 * 100;                      // stun lasts 5 seconds!
+    var percentage = timeLeft/4 * 100;                      // stun lasts 4 seconds!
 
     ctx.beginPath();
 
