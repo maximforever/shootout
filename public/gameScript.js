@@ -894,7 +894,7 @@ socket.on('gameover', function(player){
     console.log(player + " has won");
     console.log("GAME OVER!");
 
-    soundtrackMP3.stop();
+    // soundtrackMP3.stop();            // turn this back on! It caused an error
 
     var winningColor = (player == "p1") ? "#6B769E" : "#F26DF9";
 
