@@ -21,7 +21,7 @@ var originalGame = {
         hp: 100,
         player: 1,
         bullets: 50,
-        money: 50,
+        money: 200, // 50!
         stun: 0,
         invisibility: 0,
         collecting: "health",
@@ -51,7 +51,7 @@ var originalGame = {
         hp: 100,
         player: 2,
         bullets: 50,
-        money: 50,
+        money: 200, // 50!
         stun: 0,
         invisibility: 0,
         collecting: "health",
@@ -408,9 +408,14 @@ function checkForBulletHits(game, bullet, io){
         }
 
         if(bullet.stun){
-            game[bullet.player].queuedUpSounds.push("applyStun");
-            game[otherPlayer].stunnedEndTime = (Date.now() + 1000 * 5);    // 5 seconds of stun
-            game.spectators.queuedUpSounds.push("applyStun");
+
+            if(game[otherPlayer].stunnedEndTime < Date.now()){
+                game[bullet.player].queuedUpSounds.push("applyStun");
+                game[otherPlayer].stunnedEndTime = (Date.now() + 1000 * 5);    // 5 seconds of stun
+                game.spectators.queuedUpSounds.push("applyStun");
+            }
+
+            
         }
 
     }

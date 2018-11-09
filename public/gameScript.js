@@ -530,7 +530,7 @@ function drawStunnedOverlay(player) {
     ctx.beginPath();
 
     ctx.globalAlpha = (0.5 - 0.5*(1 - timeLeft/10));
-    var radius = WIDTH/2 * (timeLeft/10);
+    var radius = WIDTH/2 * (timeLeft/5);           //!!!
 
     ctx.beginPath();
     ctx.arc(player.x, player.y, radius, 0, Math.PI*2, false);               // start at 0, end at Math.PI*2
