@@ -18,7 +18,7 @@ var originalGame = {
         y: 60,
         color: "#96A9D9",
         size: 10,
-        hp: 10,
+        hp: 100,
         player: 1,
         bullets: 50,
         money: 50, // 50!
@@ -50,7 +50,7 @@ var originalGame = {
         y: 250,
         color: "#F26DF9", 
         size: 10, 
-        hp: 10,
+        hp: 100,
         player: 2,
         bullets: 50,
         money: 50, // 50!
