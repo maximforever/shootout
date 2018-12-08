@@ -18,20 +18,22 @@ var originalGame = {
         y: 60,
         color: "#96A9D9",
         size: 10,
-        hp: 100,
+        hp: 10,
         player: 1,
         bullets: 50,
         money: 50, // 50!
         stun: 0,
         invisibility: 0,
-        collecting: "health",
+        collecting: "money",
         moneyRate: 0.1,
         healthRate: 0.15,
         base: {
-            color: "#6B769E",
+            baseColor: "#6B769E",
+            healingColor: "#5ce0af",
             width: 40,
             height: 30,
             healthLeft: 100,
+            maxHealth: 100,
             x: 0,
             y: 0
         },
@@ -48,20 +50,22 @@ var originalGame = {
         y: 250,
         color: "#F26DF9", 
         size: 10, 
-        hp: 100,
+        hp: 10,
         player: 2,
         bullets: 50,
         money: 50, // 50!
         stun: 0,
         invisibility: 0,
-        collecting: "health",
+        collecting: "money",
         moneyRate: 0.1,
         healthRate: 0.1,
         base: {
-            color: "#C900C2",
+            baseColor: "#C900C2",
+            healingColor: "#f1f7a0",
             width: 40,
             height: 30,
             healthLeft: 100,
+            maxHealth: 100,
             x: 360,             
             y: 270          
         },
@@ -268,25 +272,18 @@ function healPlayer(game, player){
     if(game.status == "in progress"){
         thisPlayer = game[player];
 
-        if(thisPlayer /*&& thisPlayer.collecting == "health" */&& inRectangle(thisPlayer.x, thisPlayer.y, thisPlayer.base)){
-
-            thisPlayer.hp += thisPlayer.healthRate;                     // 0.1 = 2 HP/second
-
-            if(thisPlayer.hp > 100){  thisPlayer.hp = 100 }
-
-            if(thisPlayer.player == 1){ thisPlayer.base.color = "#5ce0af" }
-            if(thisPlayer.player == 2){ thisPlayer.base.color = "#f1f7a0" }
-
-
+        if(thisPlayer && inRectangle(thisPlayer.x, thisPlayer.y, thisPlayer.base) && thisPlayer.base.healthLeft > 0 && thisPlayer.hp < 100){
+                
             // switch base to heal
-
             thisPlayer.collecting = "health"
 
+            console.log("HEALING!");
 
+            thisPlayer.hp += thisPlayer.healthRate;                     // 0.1 = 2 HP/second
+            thisPlayer.base.healthLeft -= thisPlayer.healthRate;
        
         } else {
-            if(thisPlayer && thisPlayer.player == 1){ thisPlayer.base.color = "#6b739f" }
-            if(thisPlayer && thisPlayer.player == 2){ thisPlayer.base.color = "#C900C2" }
+            if(thisPlayer){ thisPlayer.base.color = thisPlayer.base.baseColor }
 
             // if off base, switch base to make money
 
@@ -520,6 +517,11 @@ function distanceBetween(x1, x2, y1, y2){
 }
 
 function inRectangle(x, y, rect){
+
+
+    if(typeof(rect) == "undefined"){
+        return false;
+    }
 
     var colliding = false;
 

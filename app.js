@@ -217,7 +217,7 @@ MongoClient.connect(dbAddress, function(err, client){
                     // this is effectively the game loop
                     // only run it if both players are connected
 
-                    if(thisGame.participants.p1 != null && thisGame.participants.p2 != null){
+                    if(thisGame != null && thisGame.participants.p1 != null && thisGame.participants.p2 != null){
 
                         var updatedGame = thisGame;             // these should both reference the same object, I think
 
@@ -348,8 +348,11 @@ MongoClient.connect(dbAddress, function(err, client){
                         io.emit("on deck");
 
                         setTimeout(function(){
+
+                            var track = (Math.random() < 0.5) ? 1 : 2;
+
                             thisGame.status = "in progress";
-                            io.emit("start game");
+                            io.emit("start game", track);
                         }, 3000 )
                         
                     }

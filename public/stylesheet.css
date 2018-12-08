@@ -377,18 +377,31 @@ pre {
 #ready-modal {
     padding: 20px;
     position: absolute;
-    background: #0b223c;
+    background: #325640;
+    color: #04b74a;
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
     box-shadow: 5px 7px 5px #252525;
     display: none;
     border-radius: 10px;
-    color: #a7b2bf;
     text-align: center;
     z-index: 2;
 
     display: none;
+}
+
+#ready-modal button {
+    padding: 0.5rem 1rem;
+    border: none;
+    background: #000000;
+    color: white;
+    font-size: 1rem;
+    text-transform: uppercase;
+}
+
+#ready-modal button:hover {
+    background: #2d2d2d;
 }
 
 

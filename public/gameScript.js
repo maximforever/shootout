@@ -53,6 +53,9 @@ building.src = "../../assets/patterns/building.png";
 var circuit = new Image();
 circuit.src = "../../assets/patterns/circuit.png";
 
+var numbers = new Image();
+numbers.src = "../../assets/patterns/numbers.png";
+
 var ground = new Image();
 ground.src = "../../assets/patterns/background2.png";
 //ground.height = canvas.height;
@@ -88,7 +91,8 @@ var whooshMP3 = new Audio('../../assets/whoosh.mp3');
 var buzzerMP3 = new Audio('../../assets/buzz.mp3');
 var beepMP3 = new Audio('../../assets/beep.mp3');
 
-var soundtrackMP3 = new Audio('../../assets/soundtrack.mp3');
+var soundtrackOneMP3 = new Audio('../../assets/theme1.mp3');
+var soundtrackTwoMP3 = new Audio('../../assets/theme2.mp3');
 
 
 
@@ -110,8 +114,14 @@ function gameInit(){
 
     // we should    only display ready modal if the game hasn't started && NOT spectator
 
-    if(window.location.pathname.indexOf("/player") !== -1){
-        $("#ready-modal").show();
+    if(window.location.pathname.indexOf("/player") != -1){
+
+        var thisPlayer = (typeof(player) == "undefined") ? 1 : 2;
+        var thisColor = (typeof(player) == "undefined") ? "#6b769e" : "#9b5a9e";
+        var fontColor = (typeof(player) == "undefined") ? "#1e2335" : "#321135";
+
+        $("#ready-modal-player").text(thisPlayer);
+        $("#ready-modal").css("background", thisColor).css("color", fontColor).show();
     }
     
 
@@ -285,13 +295,14 @@ function drawBoard(game){
 
 function drawBackround(color){
 
-
-
     //var groundPattern = ctx.createPattern(ground, 'repeat');
 
-    rect(-WIDTH, -HEIGHT, WIDTH*3, HEIGHT*3, "black");
+    var numberPattern = ctx.createPattern(numbers, 'repeat');
+
+    rect(-WIDTH, -HEIGHT, WIDTH*3, HEIGHT*3, numberPattern);
+    //rect(-WIDTH, -HEIGHT, WIDTH*3, HEIGHT*3, "black");
     rect(0, 0, WIDTH, HEIGHT, color);       
-    //ctx.drawImage(ground, 0 + offset.x, 0 + offset.y, canvas.width, canvas.height);
+    ctx.drawImage(ground, 0 + offset.x, 0 + offset.y, canvas.width, canvas.height);
     
 
 }
@@ -348,12 +359,21 @@ function drawPlayer(player){
         // if this player is the invisible player, draw a circle and a health bar. Otherwise, draw nothing
         if(("p" +player.player) == thisPlayer){       
 
+            ctx.save();
+
+            // orient the canvas around the player.once we do this, player coords become 0, 0
+            ctx.translate(player.x + offset.x, player.y + offset.y)
+
             // draw an empty circle          
-            circle(player.x - offset.x, player.y - offset.y, player.size, "rgba(255, 255, 255, 0)", true);
+           circle(player.x - offset.x, player.y - offset.y, player.size, "rgba(255, 255, 255, 0)", true);
+
 
             // draw health bars
             rect(player.x - player.size - 5, player.y - player.size*2, healthBarWidth, healthBarWidth/6, "red", true);
-            rect(player.x - player.size - 5, player.y - player.size*2, healthWidth, healthBarWidth/6, "green", false);
+            rect(player.x - player.size - 5, player.y - player.size*2, healthWidth, healthBarWidth/6, "#52FF30", false);
+        
+            ctx.restore();
+
         } 
 
     } else {
@@ -364,15 +384,14 @@ function drawPlayer(player){
         ctx.save();
 
         // orient the canvas around the player.once we do this, player coords become 0, 0
-        ctx.translate(player.x + offset.x, player.y + offset.y)
+        ctx.translate(player.x + offset.x, player.y + offset.y);
+
 
         // if this is the player, base rotation on the mouse. If opponent, get stored rotation
-        var angleDeg = (("p" + player.player) == thisPlayer) ? getAngle(0, 0, relativeMouseX, relativeMouseY) : player.rotationAngle;
+        var angleDeg = (("p" + player.player) == thisPlayer) ? getAngle(0 - offset.x, 0 - offset.y, relativeMouseX, relativeMouseY) : player.rotationAngle;
 
         // rotate the canvas to the specified degrees: (angle*Math.PI/180)
         ctx.rotate((angleDeg + 90 )*Math.PI/180);
-
-        circle(0, 0, player.size, player.color, true);
 
         // 1.5*player.size ensures the image is ligned up correctly within a circle SINCE the size of the image is 3*player.size                                
         // 2 on the Y axis because it lines the image up better
@@ -380,12 +399,16 @@ function drawPlayer(player){
 
         ctx.drawImage(image, 0 - player.size*1.5, 0 - player.size*2, player.size*3, player.size*3);
         
+        // bounding circle
+        circle(0 - offset.x, 0 - offset.y, player.size, "rgba(255, 255, 255, 0)", true);
+
+
         ctx.restore();
 
 
         // draw health bars
         rect(player.x - player.size - 5, player.y - player.size*2, healthBarWidth, healthBarWidth/6, "red", true);
-        rect(player.x - player.size - 5, player.y - player.size*2, healthWidth, healthBarWidth/6, "green", false);
+        rect(player.x - player.size - 5, player.y - player.size*2, healthWidth, healthBarWidth/6, "#52FF30", false);
 
     }
 
@@ -420,7 +443,13 @@ function drawPlayer(player){
 
 function drawBase(player){
     var base = currentGame[player].base;
-    rect(base.x, base.y, base.width, base.height, base.color);
+    rect(base.x, base.y, base.width, base.height, base.baseColor);
+
+
+    if(currentGame[player].collecting == "health"){
+        console.log("HEALING!");
+        rect(base.x, base.y, base.width * (base.healthLeft/base.maxHealth), base.height, base.healingColor);
+    }
 
     var startingY = (player == "p2") ? (currentGame[player].base.y - 5) : (currentGame[player].base.y + base.height);
     drawBaseType(player);
@@ -431,7 +460,9 @@ function drawObstacles(){
     if(currentGame.obstacles){
         currentGame.obstacles.forEach(function(obstacle){
             var circuitPattern = ctx.createPattern(circuit, 'repeat');
-            rect(obstacle.x, obstacle.y, obstacle.width, obstacle.height, "#000000"); //circuitPattern);
+            var numberPattern = ctx.createPattern(numbers, 'repeat');
+            rect(obstacle.x, obstacle.y, obstacle.width, obstacle.height, numberPattern);
+
         })
 
     }
@@ -790,14 +821,15 @@ socket.on('on deck', function(){
 });
 
 
-socket.on('start game', function(){
+socket.on('start game', function(track){
 
     // start the soundtrack
+    var soundtrack = (track == 1) ? soundtrackOneMP3 : soundtrackTwoMP3;
 
-/*    soundtrackMP3.currentTime = 0;
-    soundtrackMP3.volume = 0.2;
-    soundtrackMP3.play();
-*/
+    soundtrack.currentTime = 0;
+    soundtrack.volume = 0.2;
+    soundtrack.play();
+
 });
 
 // when we get an updated game, set current game to updated game.
@@ -894,7 +926,12 @@ socket.on('gameover', function(player){
     console.log(player + " has won");
     console.log("GAME OVER!");
 
-    // soundtrackMP3.stop();            // turn this back on! It caused an error
+
+    soundtrackTwoMP3.pause();
+    soundtrackTwoMP3.currentTime = 0;
+
+    soundtrackOneMP3.pause();
+    soundtrackOneMP3.currentTime = 0;
 
     var winningColor = (player == "p1") ? "#6B769E" : "#F26DF9";
 
