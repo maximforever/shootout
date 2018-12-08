@@ -116,9 +116,14 @@ function gameInit(){
 
     if(window.location.pathname.indexOf("/player") != -1){
 
+        console.log(thisPlayer);
+
         var thisPlayer = (typeof(player) == "undefined") ? 1 : 2;
-        var thisColor = (typeof(player) == "undefined") ? "#6b769e" : "#9b5a9e";
-        var fontColor = (typeof(player) == "undefined") ? "#1e2335" : "#321135";
+
+        console.log(thisPlayer);
+
+        var thisColor = (thisPlayer == 1) ? "#6b769e" : "#9b5a9e";
+        var fontColor = (thisPlayer == 1) ? "#1e2335" : "#321135";
 
         $("#ready-modal-player").text(thisPlayer);
         $("#ready-modal").css("background", thisColor).css("color", fontColor).show();
@@ -345,8 +350,10 @@ function drawPlayer(player){
     // we need to move from (0, 0) being at the top left of the graph to being in the center.
     // relative to our player, where is the mouse?
 
-    var relativeMouseX = lastX - (player.x - offset.x);
-    var relativeMouseY = lastY - (player.y - offset.y);
+    //console.log((lastX - offset.x) + ", " + (lastY - offset.y));
+
+    var relativeMouseX = lastX - offset.x;
+    var relativeMouseY = lastY - offset.y;
 
     // health bar
     var healthBarWidth = player.size*2 + 10;                // those extra 10 px make the players look a little nicer              
@@ -365,7 +372,7 @@ function drawPlayer(player){
             ctx.translate(player.x + offset.x, player.y + offset.y)
 
             // draw an empty circle          
-           circle(player.x - offset.x, player.y - offset.y, player.size, "rgba(255, 255, 255, 0)", true);
+           circle(0 - offset.x, 0 - offset.y, player.size, "rgba(255, 255, 255, 0)", true);
 
 
             // draw health bars
@@ -386,9 +393,8 @@ function drawPlayer(player){
         // orient the canvas around the player.once we do this, player coords become 0, 0
         ctx.translate(player.x + offset.x, player.y + offset.y);
 
-
         // if this is the player, base rotation on the mouse. If opponent, get stored rotation
-        var angleDeg = (("p" + player.player) == thisPlayer) ? getAngle(0 - offset.x, 0 - offset.y, relativeMouseX, relativeMouseY) : player.rotationAngle;
+        var angleDeg = (("p" + player.player) == thisPlayer) ? getAngle(player.x, player.y, relativeMouseX, relativeMouseY) : player.rotationAngle;
 
         // rotate the canvas to the specified degrees: (angle*Math.PI/180)
         ctx.rotate((angleDeg + 90 )*Math.PI/180);
@@ -827,7 +833,7 @@ socket.on('start game', function(track){
     var soundtrack = (track == 1) ? soundtrackOneMP3 : soundtrackTwoMP3;
 
     soundtrack.currentTime = 0;
-    soundtrack.volume = 0.2;
+    soundtrack.volume = 0.1;
     soundtrack.play();
 
 });
