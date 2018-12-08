@@ -406,7 +406,7 @@ function drawPlayer(player){
         ctx.drawImage(image, 0 - player.size*1.5, 0 - player.size*2, player.size*3, player.size*3);
         
         // bounding circle
-        circle(0 - offset.x, 0 - offset.y, player.size, "rgba(255, 255, 255, 0)", true);
+        //circle(0 - offset.x, 0 - offset.y, player.size, "rgba(255, 255, 255, 0)", true);
 
 
         ctx.restore();
@@ -421,7 +421,11 @@ function drawPlayer(player){
     // draw stun circle
 
     if(player.stunnedEndTime > Date.now()){
+        ctx.save();
+        ctx.translate(player.x + offset.x, player.y + offset.y);
         drawStunnedOverlay(player);
+    
+        ctx.restore();
     }
 
 
@@ -571,7 +575,7 @@ function drawStunnedOverlay(player) {
     var radius = WIDTH/2 * (timeLeft/5);           //!!!
 
     ctx.beginPath();
-    ctx.arc(player.x, player.y, radius, 0, Math.PI*2, false);               // start at 0, end at Math.PI*2
+    ctx.arc(player.x-offset.x, player.y-offset.y, radius, 0, Math.PI*2, false);               // start at 0, end at Math.PI*2
 
     ctx.shadowBlur = 30;
     ctx.shadowColor = "#a6f4d0";
